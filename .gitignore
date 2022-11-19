@@ -1,0 +1,11 @@
+.vscode/**
+**/*.swp
+build/**
+**/tmp
+docs/latex
+docs/_build
+docs/xml
+docs/class
+docs/file
+**/*.raw
+**/__pycache__

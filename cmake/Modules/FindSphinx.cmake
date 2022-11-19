@@ -1,0 +1,3 @@
+include(FindPackageHandleStandardArgs)
+find_program(SPHINX_EXECUTABLE sphinx-build)
+find_package_handle_standard_args(Sphinx DEFAULT_MSG SPHINX_EXECUTABLE)

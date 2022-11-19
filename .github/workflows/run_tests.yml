@@ -1,0 +1,36 @@
+name: 'tests'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare Runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install cmake
+          sudo apt-get install libasound2-dev
+
+      - name: build
+        run: |
+          mkdir build && cd build
+          cmake ..
+          make
+      
+      - name: test
+        run: cd build && make test
+
+      - name: save results
+        uses: actions/upload-artifact@v3
+
+        with:
+          name: test_results
+          path: build/test_results.json
