@@ -13,7 +13,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
+import subprocess
 
 # -- Project information -----------------------------------------------------
 
@@ -57,3 +57,15 @@ html_static_path = ['_static']
 # html_logo = "_static/hiemal.png"
 breathe_projects = {"hiemal": "@PROJECT_BINARY_DIR@/docs/xml"}
 breathe_default_project = "hiemal"
+
+html_context = {'add_commit_info': False,
+                'display_github': True,
+                'github_user': 'hiemal-labs',
+                'github_repo': 'hiemal',
+                'github_version': 'main/docs/'}
+
+add_commit_info = @SPHINX_CONF_COMMIT@
+if (add_commit_info):
+  html_context['add_commit_info'] = True
+  html_context['git_commit'] = "@HIEMAL_GIT_COMMIT@"
+  html_context['git_commit_long'] = "@HIEMAL_GIT_COMMIT_LONG@"

@@ -1,0 +1,7 @@
+{% extends "!footer.html" %}
+{%- block contentinfo %}
+{{ super }}
+{% if add_commit_info %}
+<p>Generated from git commit <a href="https://github.com/hiemal-labs/hiemal/tree/{{ git_commit_long }}">{{ git_commit }}</a></p>
+{% endif %} 
+{% endblock %}
