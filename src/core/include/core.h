@@ -1,6 +1,8 @@
 #ifndef _CORE_H
 #define _CORE_H
 
+#include "cmake_info.h"
+
 #include "error.h"
 #define UNIT_TESTING
 

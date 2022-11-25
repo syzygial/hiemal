@@ -1,6 +1,8 @@
 #include "playback.h"
 
+#ifdef __linux__
 void playChunkALSA(chunk_t *chunk) {
+  #ifdef WITH_ALSA
   snd_pcm_t *handle;
   snd_pcm_uframes_t frames;
   int e;
@@ -34,4 +36,9 @@ void playChunkALSA(chunk_t *chunk) {
     exit(EXIT_FAILURE);
   }
   snd_pcm_close(handle);
+  return;
+  #else
+  return;
+  #endif // #ifdef WITH_ALSA
 }
+#endif // #ifdef __linux__

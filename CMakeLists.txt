@@ -1,19 +1,62 @@
 cmake_minimum_required(VERSION 3.13)
 
-# get git commit hash to put into the version string
-execute_process(COMMAND "git" "rev-parse" "--short" "HEAD" 
-  OUTPUT_VARIABLE HIEMAL_GIT_COMMIT 
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "git" "rev-parse" "HEAD" 
-  OUTPUT_VARIABLE HIEMAL_GIT_COMMIT_LONG
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-project(HIEMAL VERSION 0.1.0)
+# check if we are inside of a git repository
+execute_process(COMMAND "git" "status"
+  RESULT_VARIABLE GIT_STATUS_RET OUTPUT_QUIET ERROR_QUIET)
 
-configure_file(cmake/version.h.in version.h @ONLY)
+if (GIT_STATUS_RET EQUAL "0")
+  # get git commit hash to put into the version string
+  execute_process(COMMAND "git" "rev-parse" "--short" "HEAD" 
+    OUTPUT_VARIABLE HIEMAL_GIT_COMMIT 
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND "git" "rev-parse" "HEAD" 
+    OUTPUT_VARIABLE HIEMAL_GIT_COMMIT_LONG
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  project(HIEMAL VERSION 0.1.0)
+endif()
 
 add_library(hiemal SHARED)
-target_link_libraries(hiemal asound m)
+target_include_directories(hiemal PRIVATE ${CMAKE_BINARY_DIR}/include)
+target_link_libraries(hiemal m)
+
+if (WITH_ALSA)
+  target_link_libraries(hiemal asound)
+endif()
+
 add_subdirectory(src/core)
 add_subdirectory(docs)
 add_subdirectory(test)
 
+file(MAKE_DIRECTORY include)
+configure_file(cmake/cmake_info.h.in include/cmake_info.h @ONLY)
+
+# config summary
+message(STATUS "")
+message(STATUS "================== Configuration Summary ==================")
+message(STATUS "General:")
+message(STATUS "  Hiemal version: ${HIEMAL_VERSION}")
+message(STATUS "  CMake version: ${CMAKE_VERSION}")
+message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION}")
+if (GIT_STATUS_RET EQUAL "0")
+  message(STATUS "  Found git repository: YES")
+  message(STATUS "    Git commit: ${HIEMAL_GIT_COMMIT}")
+else()
+  message(STATUS "  Found git repository: NO")
+endif()
+message(STATUS "")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  message(STATUS "Linux-specific options:")
+  if(WITH_ALSA)
+    message(STATUS "  ALSA: YES")
+  else()
+    message(STATUS "  ALSA: NO")
+  endif()
+  message(STATUS "")
+endif()
+message(STATUS "Documentation:")
+if (SPHINX_COMMIT_INFO)
+  message(STATUS "  Sphinx add commit info to footer: YES")
+else()
+  message(STATUS "  Sphinx add commit info to footer: NO")
+endif()
+message(STATUS "")
