@@ -19,13 +19,13 @@ add_library(hiemal SHARED)
 target_include_directories(hiemal PRIVATE ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(hiemal m)
 
-if (WITH_ALSA)
-  target_link_libraries(hiemal asound)
-endif()
-
 add_subdirectory(src/core)
 add_subdirectory(docs)
 add_subdirectory(test)
+
+if (WITH_ALSA)
+  target_link_libraries(hiemal asound)
+endif()
 
 file(MAKE_DIRECTORY include)
 configure_file(cmake/cmake_info.h.in include/cmake_info.h @ONLY)
