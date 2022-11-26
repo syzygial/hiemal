@@ -7,11 +7,6 @@
 #include "intern/math.h"
 
 
-//#define IMPL(name) int name##_impl(int argc, char **arg_names, void **args)
-#define IMPL(name) int name##_impl(unsigned int n_samples, \
-  buf_array_t *inputs, buf_array_t *outputs, kwargs_t *kwargs)
-
-
 int _buf_shift_down_64(void *buf, const unsigned int n_bytes, 
     const unsigned int n_shift) {
   const unsigned int n_items = n_bytes / 8;
@@ -45,6 +40,8 @@ int _buf_shift_up_64(void *buf, const unsigned int n_bytes,
 }
 
 IMPL(pcm16_to_double) {
+  buf_array_t *inputs = (buf_array_t*)_inputs;
+  buf_array_t *outputs = (buf_array_t*)_outputs;
   // no kwargs
   if ((inputs->n_buffer != 1) || (outputs->n_buffer != 1)) {
     return MISSING_IMPL;
@@ -64,6 +61,8 @@ IMPL(pcm16_to_double) {
 }
 
 IMPL(double_to_pcm16) {
+  buf_array_t *inputs = (buf_array_t*)_inputs;
+  buf_array_t *outputs = (buf_array_t*)_outputs;
   // no kwargs
   if ((inputs->n_buffer != 1) || (outputs->n_buffer != 1)) {
     return MISSING_IMPL;
@@ -83,6 +82,8 @@ IMPL(double_to_pcm16) {
 }
 
 IMPL(fir_filter) {
+  buf_array_t *inputs = (buf_array_t*)_inputs;
+  buf_array_t *outputs = (buf_array_t*)_outputs;
   unsigned long int b_order = 0;
   double_t *b = NULL;
   int ii;

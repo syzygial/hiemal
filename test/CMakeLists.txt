@@ -1,4 +1,4 @@
-SET(TEST_FILES test_buffer.c test_dsp.c test_math.c test_io.c)
+SET(TEST_FILES test_buffer.c test_dsp.c test_math.c test_io.c test_async.c)
   
 
 add_executable(run_tests EXCLUDE_FROM_ALL test_main.c test_common.c ${TEST_FILES})
@@ -11,7 +11,7 @@ add_custom_command(OUTPUT test_main.c
   ${CMAKE_SOURCE_DIR}/test/test_main.c
   ${PROJECT_BINARY_DIR}/test/test_main.c)
 target_link_libraries(run_tests hiemal)
-target_include_directories(run_tests PRIVATE include ${PROJECT_SOURCE_DIR}/src/core/include)
+target_include_directories(run_tests PRIVATE include ${PROJECT_SOURCE_DIR}/src/core/include ${CMAKE_BINARY_DIR}/include)
 add_custom_target(test COMMAND test/run_tests 
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR} 
   DEPENDS run_tests

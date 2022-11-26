@@ -27,7 +27,7 @@ if (WITH_ALSA)
   target_link_libraries(hiemal asound)
 endif()
 
-file(MAKE_DIRECTORY include)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
 configure_file(cmake/cmake_info.h.in include/cmake_info.h @ONLY)
 
 # config summary
