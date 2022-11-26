@@ -30,6 +30,7 @@ set(SPHINX_HTML_OUTPUT ${SPHINX_HTML_DIR}/index.html)
 configure_file(${PROJECT_SOURCE_DIR}/docs/conf.py.in ${DOC_OUTPUT}/conf.py @ONLY)
 file(MAKE_DIRECTORY ${DOC_OUTPUT}/_static ${DOC_OUTPUT}/_templates)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/_static/hiemal.png ${DOC_OUTPUT}/_static COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/_static/hm_favicon.png ${DOC_OUTPUT}/_static COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/_templates/footer.html ${DOC_OUTPUT}/_templates COPYONLY)
 add_custom_command(OUTPUT ${SPHINX_HTML_OUTPUT} 
   DEPENDS ${DOXYGEN_XML_OUTPUT} 
