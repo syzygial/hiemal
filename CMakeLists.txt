@@ -27,7 +27,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   endif()
 endif()
 
-set(WITH_PYTHON "ON" CACHE BOOL "Build python module")  
+set(WITH_PYTHON "OFF" CACHE BOOL "Build python module")  
 find_package (Python COMPONENTS Interpreter Development)
 if(NOT Python_FOUND)
   set(WITH_PYTHON "OFF")
