@@ -1,10 +1,3 @@
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(WITH_ALSA "ON" CACHE BOOL "Use ALSA")  
-  find_package(ALSA)
-  if(NOT ALSA_FOUND)
-    set(WITH_ALSA "OFF")
-  endif()
-endif()
 
 target_include_directories(hiemal PUBLIC include)
 target_sources(hiemal PRIVATE 
