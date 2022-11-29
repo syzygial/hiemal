@@ -9,7 +9,8 @@ target_sources(hiemal PRIVATE
   intern/math.c 
   intern/async.c 
   signal_chain.c 
-  io.c)
+  io.c
+  info.c)
 
 set (HIEMAL_PUBLIC_INCLUDE
   "include/dsp.h"

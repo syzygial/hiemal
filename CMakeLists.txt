@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 execute_process(COMMAND "git" "status"
   RESULT_VARIABLE GIT_STATUS_RET OUTPUT_QUIET ERROR_QUIET)
 
+project(HIEMAL VERSION 0.1.0)
 if (GIT_STATUS_RET EQUAL "0")
   # get git commit hash to put into the version string
   execute_process(COMMAND "git" "rev-parse" "--short" "HEAD" 
@@ -12,7 +13,9 @@ if (GIT_STATUS_RET EQUAL "0")
   execute_process(COMMAND "git" "rev-parse" "HEAD" 
     OUTPUT_VARIABLE HIEMAL_GIT_COMMIT_LONG
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  project(HIEMAL VERSION 0.1.0)
+  set(HIEMAL_VERSION_STR "${HIEMAL_VERSION_MAJOR}.${HIEMAL_VERSION_MINOR}.${HIEMAL_VERSION_PATCH}+${HIEMAL_GIT_COMMIT}")
+else()
+set(HIEMAL_VERSION_STR "${HIEMAL_VERSION_MAJOR}.${HIEMAL_VERSION_MINOR}.${HIEMAL_VERSION_PATCH}")
 endif()
 
 add_library(hiemal SHARED)
@@ -37,8 +40,13 @@ if (WITH_ALSA)
   target_link_libraries(hiemal asound)
 endif()
 
+set(WITH_UTILS "OFF" CACHE BOOL "Build hiemal utilities")
+
 add_subdirectory(src/core)
 add_subdirectory(src/python)
+if(WITH_UTILS)
+  add_subdirectory(src/utils)
+endif()
 add_subdirectory(docs)
 add_subdirectory(test)
 
@@ -59,6 +67,12 @@ else()
   message(STATUS "  Found git repository: NO")
 endif()
 message(STATUS "  Install location: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "")
+if(WITH_UTILS)
+  message(STATUS "Utils: YES")
+else()
+  message(STATUS "Utils: NO")
+endif()
 message(STATUS "")
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   message(STATUS "Linux-specific options:")
