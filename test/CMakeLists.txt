@@ -11,6 +11,7 @@ if(NOT WITH_PROTOBUF)
 endif()
 
 add_executable(run_tests EXCLUDE_FROM_ALL test_main.c test_common.c ${TEST_FILES})
+target_sources(run_tests PRIVATE mock/mock_async.c)
 add_custom_command(OUTPUT test_main.c 
   DEPENDS test_main.c.in util/gendriver.py ${TEST_FILES}
   COMMAND python3 util/gendriver.py --exclude_files ${GENDRIVER_EXCLUDED_FILES}

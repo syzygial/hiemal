@@ -18,8 +18,8 @@ typedef struct _kwargs {
   void **args;
 } kwargs_t;
 
-#define IMPL(name) int name##_impl(unsigned int n_samples, \
+#define IMPL(name) int name##_impl(unsigned int n_bytes, \
   void *_inputs, void *_outputs, kwargs_t *kwargs)
-#define IMPL_ARGS unsigned int n_samples, void *_inputs, void *_outputs, kwargs_t *kwargs
+#define IMPL_ARGS unsigned int n_bytes, void *_inputs, void *_outputs, kwargs_t *kwargs
 
 #endif

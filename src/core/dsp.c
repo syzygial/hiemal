@@ -40,6 +40,7 @@ int _buf_shift_up_64(void *buf, const unsigned int n_bytes,
 }
 
 IMPL(pcm16_to_double) {
+  unsigned int n_samples = n_bytes / sizeof(uint16_t);
   buf_array_t *inputs = (buf_array_t*)_inputs;
   buf_array_t *outputs = (buf_array_t*)_outputs;
   // no kwargs
@@ -61,6 +62,7 @@ IMPL(pcm16_to_double) {
 }
 
 IMPL(double_to_pcm16) {
+  unsigned int n_samples = n_bytes / sizeof(double_t);
   buf_array_t *inputs = (buf_array_t*)_inputs;
   buf_array_t *outputs = (buf_array_t*)_outputs;
   // no kwargs
@@ -82,6 +84,7 @@ IMPL(double_to_pcm16) {
 }
 
 IMPL(fir_filter) {
+  unsigned int n_samples = n_bytes / sizeof(double_t);
   buf_array_t *inputs = (buf_array_t*)_inputs;
   buf_array_t *outputs = (buf_array_t*)_outputs;
   unsigned long int b_order = 0;
@@ -153,7 +156,7 @@ int fir_filter(double_t *src, double_t *dest, double_t *b, \
   outputs.n_buffer = 1;
   outputs.buffers = &out_buf;
   
-  fir_filter_impl(n_samples, &inputs, &outputs, &kwargs);
+  fir_filter_impl(n_samples*sizeof(double_t), &inputs, &outputs, &kwargs);
 
   //clean up
   free(args);
