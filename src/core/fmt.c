@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fmt.h"
-#include "error.h"
+#include "intern/fmt.h"
+#include "intern/error.h"
 
 const read_raw_opts_t RAW_AUDIO_DEFAULTS = {44100, INTERLEAVED_16S};
 

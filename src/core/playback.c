@@ -1,4 +1,4 @@
-#include "playback.h"
+#include "intern/playback.h"
 
 #ifdef __linux__
 void playChunkALSA(chunk_t *chunk) {

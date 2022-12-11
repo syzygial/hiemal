@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "test_pb_c_wrap.h"
+#include "hm_protobuf.h"
 #include "test_common.h"
 
 #ifdef __cplusplus

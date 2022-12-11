@@ -1,5 +1,5 @@
 #include "mock/mock_async.h"
-#include "core.h"
+#include "intern/core.h"
 
 
 // operation that mutliplies input by 2

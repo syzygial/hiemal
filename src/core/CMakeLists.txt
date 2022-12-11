@@ -6,13 +6,13 @@ target_sources(hiemal PRIVATE
   error.c 
   buffer.c 
   dsp.c 
-  intern/math.c 
-  intern/async.c 
+  math.c 
+  async.c 
   signal_chain.c 
   io.c
   info.c)
 
-set (HIEMAL_PUBLIC_INCLUDE
+set(HIEMAL_PUBLIC_INCLUDE
   "include/dsp.h"
   "include/buffer.h")
 

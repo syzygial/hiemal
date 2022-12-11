@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "dsp.h"
-#include "core.h"
+#include "intern/dsp.h"
+#include "intern/core.h"
 #include "intern/math.h"
 
 

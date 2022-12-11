@@ -5,15 +5,6 @@
 
 #include "intern/async.h"
 
-struct _async_handle {
-  bool *loop_active;
-  bool *thread_created;
-  unsigned int n_fn;
-  void *inputs[ASYNC_LOOP_MAX_FN];
-  void *outputs[ASYNC_LOOP_MAX_FN];
-  kwargs_t kwargs[ASYNC_LOOP_MAX_FN];
-  int (*fn_ptrs[ASYNC_LOOP_MAX_FN])(IMPL_ARGS);
-};
 
 void *_async_loop(void *_h) {
   async_handle_t* h = (async_handle_t*)_h;

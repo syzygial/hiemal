@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "error.h"
+#include "intern/error.h"
 
 int AL_errno = 0;
 char AL_errtxt[ERRTXT_LEN] = {'\0'};

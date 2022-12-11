@@ -1,7 +1,7 @@
 /// \file buffer.h
 
-#ifndef _RBUF_H
-#define _RBUF_H
+#ifndef _BUFFER_H
+#define _BUFFER_H
 
 #define BUF_WRITE_BLOCKING    0x0
 #define BUF_WRITE_NONBLOCKING 0x1

@@ -1,23 +1,18 @@
-#ifndef _INTERN_ASYNC_H
-#define _INTERN_ASYNC_H
+#ifndef _TEST_ASYNC_H
+#define _TEST_ASYNC_H
 
+#include "api/async.h"
 #include "core.h"
+#include <stdbool.h>
 
-#define ASYNC_LOOP_MAX_FN 100
-
-typedef struct _async_handle async_handle_t;
-typedef struct _async_args {
-  int (*fn)(IMPL_ARGS);
-  void *inputs;
-  void *outputs;
-  kwargs_t kwargs;
-} async_args_t;
-
-
-
-int async_loop_init(async_handle_t **h);
-int async_loop_delete(async_handle_t **h);
-
-int async_loop_add_fn(async_handle_t *h, async_args_t args);
+struct _async_handle {
+  bool *loop_active;
+  bool *thread_created;
+  unsigned int n_fn;
+  void *inputs[ASYNC_LOOP_MAX_FN];
+  void *outputs[ASYNC_LOOP_MAX_FN];
+  kwargs_t kwargs[ASYNC_LOOP_MAX_FN];
+  int (*fn_ptrs[ASYNC_LOOP_MAX_FN])(IMPL_ARGS);
+};
 
 #endif

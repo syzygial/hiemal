@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "core.h"
-#include "buffer.h"
+#include "intern/core.h"
+#include "intern/buffer.h"
 
 /*! \struct _buffer buffer.c "core/buffer.h"
 *   \brief buffer struct
@@ -29,16 +29,6 @@
 *   \var _buffer::ext_buf
 *   was the buffer initialized externally (i.e. not with ``buffer_init()``)?
 */
-struct _buffer {
-  void *buf;
-  unsigned int buf_len_bytes;
-  void *read_ptr;
-  void *write_ptr;
-  buffer_type_t type;
-  buffer_state_t state;
-  bool in_use;
-  bool ext_buf;
-};
 
 #define ASSERT_RBUF(buf) if (buf->type != RING) { return BAD_ARG; }
 #define ASSERT_LBUF(buf) if (buf->type != LINEAR) { return BAD_ARG; }

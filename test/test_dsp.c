@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "test_dsp.h"
+#include "intern/dsp.h"
 #include "test_common.h"
 
 TEST(shift_down_64) {

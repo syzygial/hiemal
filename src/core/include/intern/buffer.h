@@ -1,10 +1,10 @@
 // testing header that exposes more dsp internals
 
-#ifndef _TEST_RBUF_H
-#define _TEST_RBUF_H
+#ifndef _INTERN_BUFFER_H
+#define _INTERN_BUFFER_H
 
 #include <stdbool.h>
-#include "buffer.h"
+#include "api/buffer.h"
 
 unsigned int _rbuf_n_write_bytes(buffer_t *buf);
 unsigned int _rbuf_n_read_bytes(buffer_t *buf);
@@ -17,6 +17,7 @@ struct _buffer {
   buffer_type_t type;
   buffer_state_t state;
   bool in_use;
+  bool ext_buf;
 };
 
 #endif

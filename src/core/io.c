@@ -1,6 +1,6 @@
-#include "core.h"
+#include "intern/core.h"
 #include "intern/async.h"
-#include "io.h"
+#include "intern/io.h"
 
 #include <unistd.h>
 

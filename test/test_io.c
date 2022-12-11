@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "test_io.h"
+#include "intern/io.h"
 #include "test_common.h"
 
 TEST(src_fd) {

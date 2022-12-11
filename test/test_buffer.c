@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "test_common.h"
-#include "test_buffer.h"
+#include "intern/buffer.h"
 
 // helper functions
 static inline void _set_rbuf_ptrs(buffer_t *rbuf, \
