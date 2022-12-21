@@ -61,6 +61,14 @@ endif()
 
 set(WITH_UTILS "OFF" CACHE BOOL "Build hiemal utilities")
 
+set(RESOURCE_FILES ${CMAKE_BINARY_DIR}/pkgconfig/hiemal.pc)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/pkgconfig)
+configure_file(cmake/cmake_info.h.in include/cmake_info.h @ONLY)
+configure_file(cmake/pkgconfig/hiemal.pc.in pkgconfig/hiemal.pc @ONLY)
+set_target_properties(hiemal PROPERTIES
+  RESOURCE "${RESOURCE_FILES}")
+
 add_subdirectory(src/core)
 add_subdirectory(src/python)
 if(WITH_UTILS)
@@ -72,8 +80,7 @@ endif()
 add_subdirectory(docs)
 add_subdirectory(test)
 
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
-configure_file(cmake/cmake_info.h.in include/cmake_info.h @ONLY)
+
 
 # config summary
 message(STATUS "")

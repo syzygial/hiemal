@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+Name: Hiemal
+Description: A lightweight audio library
+Version: @HIEMAL_VERSION_STR@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lhiemal
+
