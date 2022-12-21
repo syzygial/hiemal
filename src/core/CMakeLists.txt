@@ -10,7 +10,8 @@ target_sources(hiemal PRIVATE
   async.c 
   signal_chain.c 
   io.c
-  info.c)
+  info.c
+  logging.c)
 
 set(HIEMAL_PUBLIC_INCLUDE
   "include/dsp.h"
