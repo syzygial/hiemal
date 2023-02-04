@@ -9,3 +9,5 @@ docs/class
 docs/file
 **/*.raw
 **/__pycache__
+hiemal.egg-info/**
+dist/**
