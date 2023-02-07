@@ -4,10 +4,10 @@ setup(
   name="hiemal", 
   version="0.1.0-alpha.0", 
   description="A lightweight audio library",
-  long_description="Hiemal is a lightweight C audio library which aims to"
-    "provide a simple interface for building signal chains for low-latency,"
-    "real-time audio processing including DSP, file i/o, etc. This project"
-    "is very young and under active development, so the public API should not"
+  long_description="Hiemal is a lightweight C audio library which aims to "
+    "provide a simple interface for building signal chains for low-latency, "
+    "real-time audio processing including DSP, file i/o, etc. This project "
+    "is very young and under active development, so the public API should not "
     "be considered stable and might change with little notice.",
   package_dir={'hiemal': "src/python/hiemal"},
   url="https://www.hiemal.dev/",
