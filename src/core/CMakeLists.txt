@@ -13,9 +13,13 @@ target_sources(hiemal PRIVATE
   info.c
   logging.c)
 
+if(WITH_PROTOBUF)
+  target_sources(hiemal PRIVATE recording.c)
+endif()
+
 set(HIEMAL_PUBLIC_INCLUDE
-  "include/intern/dsp.h"
-  "include/intern/buffer.h")
+  "include/api/buffer.h"
+  "include/api/recording.h")
 
 set_target_properties(hiemal PROPERTIES PUBLIC_HEADER "${HIEMAL_PUBLIC_INCLUDE}")
 install(TARGETS hiemal

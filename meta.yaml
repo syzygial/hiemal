@@ -1,0 +1,12 @@
+package:
+  name: hiemal
+  version: 0.1.0a1
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+

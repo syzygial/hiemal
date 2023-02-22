@@ -2,14 +2,27 @@ syntax = "proto3";
 
 package hiemal;
 
+enum audio_format {
+  WAV8U = 0;
+  WAV16S = 1;
+  WAV32F = 2;
+  WAV64F = 3; 
+}
+
 message buf_snapshot {
-  int32 rel_time = 1;
+  enum io_type {
+    READ = 0;
+    WRITE = 1;
+  }
+  float rel_time = 1;
   bytes raw_data = 2;
 }
 
 message buf_metadata {
-  float fs = 1;
+  uint32 fs = 1;
   uint32 bit_depth = 2;
+  uint32 buf_size = 3;
+  audio_format fmt = 4;
 }
 
 message buffer {

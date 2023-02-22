@@ -1,4 +1,18 @@
 from setuptools import setup
+import setuptools.command.build_py
+import glob
+import subprocess
+
+def gen_pb_python(src, dest):
+  proto_files = glob.glob(src + "/*.proto")
+  subprocess.run(["protoc", "--proto_path="+src,"--python_out="+dest] + proto_files)
+
+
+class build_py(setuptools.command.build_py.build_py):
+  def run(self):
+    setuptools.command.build_py.build_py.run(self)
+    gen_pb_python("src/protobuf", self.build_lib + "/hiemal/backend/protobuf")
+
 
 setup(
   name="hiemal", 
@@ -9,6 +23,7 @@ setup(
     "real-time audio processing including DSP, file i/o, etc. This project "
     "is very young and under active development, so the public API should not "
     "be considered stable and might change with little notice.",
+  cmdclass={'build_py': build_py},
   package_dir={'hiemal': "src/python/hiemal"},
   url="https://www.hiemal.dev/",
   download_url="https://github.com/hiemal-labs/hiemal",

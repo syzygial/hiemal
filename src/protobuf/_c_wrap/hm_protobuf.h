@@ -5,8 +5,13 @@
 extern "C" {
 #endif
 
-int hm_buffer_pb_create(void **buf_pb);
-int hm_buffer_pb_delete(void **buf_pb);
+typedef struct __pb_buffer pb_buffer_t;
+
+int _hm_pb_buffer_create(pb_buffer_t **buf_pb);
+int _hm_pb_buffer_delete(pb_buffer_t **buf_pb);
+
+int _hm_pb_buffer_write(pb_buffer_t *buf_pb, const void *data, unsigned int n_bytes);
+int _hm_pb_buffer_save(pb_buffer_t *buf_pb, const char *filename);
 
 #ifdef __cplusplus
 }

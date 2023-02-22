@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include "api/buffer.h"
+#include "api/recording.h"
 
 unsigned int _rbuf_n_write_bytes(buffer_t *buf);
 unsigned int _rbuf_n_read_bytes(buffer_t *buf);
@@ -18,6 +19,7 @@ struct _buffer {
   buffer_state_t state;
   bool in_use;
   bool ext_buf;
+  recording_t *r;
 };
 
 #endif

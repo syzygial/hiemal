@@ -7,6 +7,7 @@
 #define BUF_WRITE_NONBLOCKING 0x1
 
 typedef struct _buffer buffer_t;
+typedef struct _recording recording_t;
 typedef struct _buf_array {
   unsigned int n_buffer;
   buffer_t **buffers;
@@ -23,6 +24,8 @@ int buffer_init(buffer_t **buf, unsigned int n_bytes, \
   buffer_type_t type);
 int buffer_init_ext(buffer_t **buf, unsigned int n_bytes, \
   buffer_type_t type, void *raw_buffer);
+
+int buffer_add_recording(buffer_t *buf, recording_t *r);
 
 int buffer_delete(buffer_t **buf);
 
