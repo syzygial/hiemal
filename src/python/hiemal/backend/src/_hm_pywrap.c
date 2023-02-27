@@ -2,7 +2,8 @@
 #include <Python.h>
 #include <structmember.h>
 
-#include <hiemal/buffer.h>
+// #include <hiemal/buffer.h>
+#include "intern/buffer.h"
 
 // python wrapper around buffer_t object
 typedef struct {
@@ -46,7 +47,7 @@ static PyObject *PyBuf_write(PyBufObject *self, PyObject *args, PyObject *kwargs
   if (!PyArg_ParseTuple(args, "O!", &PyBytes_Type, &bytes)) {
     return NULL;
   }
-  PyBytes_AsStringAndSize(bytes, (char**)&dat, &len);
+  PyBytes_AsStringAndSize((PyObject*)bytes, (char**)&dat, &len);
   buffer_write(self->buf, (const void*)dat, (unsigned int)len);
   Py_RETURN_NONE;
 }
@@ -54,6 +55,16 @@ static PyObject *PyBuf_write(PyBufObject *self, PyObject *args, PyObject *kwargs
 static PyMethodDef PyBuf_methods[] = { 
   {"write", (PyCFunction) PyBuf_write, METH_VARARGS | METH_KEYWORDS, "write to buffer"},
   {NULL} 
+};
+
+static PyObject *PyBuf_getraw(PyBufObject *self, void *unused) {
+  return PyMemoryView_FromMemory((char*)self->buf->buf, \
+    (Py_ssize_t)self->buf->buf_len_bytes, _Py_MEMORYVIEW_C);
+}
+
+static PyGetSetDef PyBuf_getset[] = {
+  {"raw", (getter)PyBuf_getraw, NULL, NULL, NULL},
+  {NULL}
 };
 
 static PyTypeObject PyBufType = {
@@ -66,6 +77,7 @@ static PyTypeObject PyBufType = {
   .tp_dealloc = (destructor) PyBuf_dealloc,
   .tp_members = PyBuf_members,
   .tp_methods = PyBuf_methods,
+  .tp_getset = PyBuf_getset,
 };
 
 static PyObject *hm_test(PyObject *self, PyObject *args) {

@@ -94,7 +94,8 @@ def main():
     sources=["src/python/hiemal/backend/src/_hm_pywrap.c"], \
     libraries=["hiemal"], \
     library_dirs=[cmake.install_dir + "/lib"], \
-    include_dirs=[cmake.install_dir + "/include"],
+    include_dirs=[cmake.install_dir + "/include",
+      "src/core/include"],
     runtime_library_dirs=["$ORIGIN/../lib"],
     extra_compile_args=["-g"])
 

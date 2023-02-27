@@ -29,3 +29,7 @@ message buffer {
   buf_metadata metadata = 1;
   repeated buf_snapshot buf_data = 2;
 }
+
+message buf_list {
+  repeated buffer buffers = 1;
+}

@@ -20,6 +20,7 @@ struct _buffer {
   bool in_use;
   bool ext_buf;
   recording_t *r;
+  unsigned int r_id;
 };
 
 #endif

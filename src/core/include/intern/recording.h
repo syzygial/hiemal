@@ -2,15 +2,17 @@
 #define _INTERN_RECORDING_H
 
 #include <stdbool.h>
+
+#include "core.h"
 #include "api/recording.h"
 
 #include "hm_protobuf.h"
 
 struct _recording {
   char *filename;
-  buffer_t *buf;
   bool active;
-  pb_buffer_t *buf_pb_msg;
+  pb_buflist_t *buflist;
+  MEMBER_ARRAY(buffer)
 };
 
 #endif

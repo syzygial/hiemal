@@ -3,7 +3,6 @@
 set (PROTO_FILES
   buffer.proto
 )
-
 string(REGEX REPLACE "[.]proto$" ".pb.cc" PB_OUTPUT_SOURCES ${PROTO_FILES})
 string(REGEX REPLACE "[.]proto$" ".pb.h" PB_OUTPUT_HEADERS ${PROTO_FILES})
 

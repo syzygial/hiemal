@@ -24,6 +24,15 @@ typedef struct _kwargs {
   name##_t **name##s; \
   } name##_array_t;
 
+#define MEMBER_ARRAY(type) unsigned int max_##type; \
+ unsigned int n_##type; \
+ type##_t **type##s;
+
+typedef struct _array {
+  unsigned int n_items;
+  unsigned int max_items;
+  void **data;
+} hm_array_t;
 
 #define IMPL(name) int name##_impl(unsigned int n_bytes, \
   void *_inputs, void *_outputs, kwargs_t *kwargs)

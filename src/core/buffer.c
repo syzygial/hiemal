@@ -222,10 +222,12 @@ int buffer_init_ext(buffer_t **buf, unsigned int n_bytes, buffer_type_t type, vo
   (*buf)->in_use = false;
   (*buf)->ext_buf = true;
   (*buf)->r = NULL;
+  (*buf)->r_id = 0;
   return 0;
 }
 
 int buffer_add_recording(buffer_t *buf, recording_t *r) {
+  buf->r_id = hm_recording_n_buffers(r);
   buf->r = r;
   return 0;
 }
@@ -291,7 +293,7 @@ int _rbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
   #ifdef WITH_PROTOBUF
   if(dest->r != NULL) {
-    hm_recording_write(dest->r, src, n_bytes);
+    hm_recording_write(dest->r, dest->r_id, src, n_bytes);
   }
   #endif
   switch(dest->type) {
