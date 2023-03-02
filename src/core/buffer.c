@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include <string.h>
 
+#ifdef WITH_PROTOBUF
 #include "api/recording.h"
+#endif
 #include "intern/core.h"
 #include "intern/buffer.h"
 
@@ -226,11 +228,13 @@ int buffer_init_ext(buffer_t **buf, unsigned int n_bytes, buffer_type_t type, vo
   return 0;
 }
 
+#ifdef WITH_PROTOBUF
 int buffer_add_recording(buffer_t *buf, recording_t *r) {
   buf->r_id = hm_recording_n_buffers(r);
   buf->r = r;
   return 0;
 }
+#endif
 
 /*! \brief Free buffer memory
 * \param buf address of ``buffer_t*`` handle
