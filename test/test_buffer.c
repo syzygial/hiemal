@@ -129,9 +129,9 @@ TEST(rbuf_write) {
   _set_rbuf_ptrs(rbuf_test, 2, 3);
   rbuf_test->state = NORMAL;
   int rc;
-  const unsigned char data[4] = {1,2,3,4};
-  rc = buffer_write(rbuf_test, data, 4);
-  ASSERT_TRUE(rc == 0);
+  const unsigned char data[5] = {1,2,3,4,5};
+  rc = buffer_write(rbuf_test, data, 5);
+  ASSERT_TRUE(rc == 4);
   const unsigned char rbuf_ref[5] = {3,4,0,1,2};
   ASSERT_TRUE(memcmp((char*)(rbuf_test->buf),rbuf_ref, 5) == 0);
   ASSERT_TRUE(rbuf_test->state == FULL);
@@ -152,8 +152,8 @@ TEST(rbuf_read) {
   //test
   char data_buf[4] = {'\0'};
   
-  rc = buffer_read(rbuf_test, data_buf, 4);
-  ASSERT_TRUE(rc == 0);
+  rc = buffer_read(rbuf_test, data_buf, 8);
+  ASSERT_TRUE(rc == 4);
   const unsigned char data_ref[4] = {1,2,3,4};
   ASSERT_TRUE(memcmp(data_buf,data_ref, 4) == 0);
   ASSERT_TRUE(rbuf_test->state == EMPTY);

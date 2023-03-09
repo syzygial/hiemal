@@ -251,12 +251,12 @@ int buffer_delete(buffer_t **buf) {
 
 #define PREPARE_BUF_WRITE(buf) \
   if (buf->in_use == true) { \
-    return EAGAIN; \
+    return -EAGAIN; \
   } \
   buf->in_use = true; \
   unsigned int n_bytes_available = buffer_n_write_bytes(buf); \
   if (n_bytes_available < n_bytes) { \
-    return EAGAIN; \
+    n_bytes = n_bytes_available; \
   }
 
 int _lbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
@@ -266,7 +266,7 @@ int _lbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
   dest->write_ptr += n_bytes;
   set_buffer_state(dest, '-');
   dest->in_use = false;
-  return 0;
+  return n_bytes;
 }
 
 int _rbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
@@ -291,7 +291,7 @@ int _rbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
     set_buffer_state(dest, 'w');
   }
   dest->in_use = false;
-  return 0;
+  return n_bytes;
 }
 
 int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
@@ -310,12 +310,12 @@ int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 
 #define PREPARE_BUF_READ(buf) \
   if (buf->in_use == true) { \
-    return EAGAIN; \
+    return -EAGAIN; \
   } \
   buf->in_use = true; \
   unsigned int n_bytes_available = buffer_n_read_bytes(buf); \
   if (n_bytes_available < n_bytes) { \
-    return EAGAIN; \
+    n_bytes = n_bytes_available; \
   }
 
 int _lbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
@@ -325,7 +325,7 @@ int _lbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
   src->read_ptr += n_bytes;
   set_buffer_state(src, '-');
   src->in_use = false;
-  return 0;
+  return n_bytes;
 }
 
 int _rbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
@@ -353,7 +353,7 @@ int _rbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
     set_buffer_state(src, 'r');
   }
   src->in_use = false;
-  return 0;
+  return n_bytes;
 }
 
 int buffer_read(buffer_t *src, void *dest, unsigned int n_bytes) {
