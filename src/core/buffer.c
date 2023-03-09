@@ -364,3 +364,30 @@ int buffer_read(buffer_t *src, void *dest, unsigned int n_bytes) {
       return _rbuf_read(src, dest, n_bytes);
   }
 }
+
+int buffer_view_raw(buffer_t *src, void *dest, unsigned int offset, unsigned int n_bytes) {
+  void *start_ptr = src->buf + offset;
+  memcpy(dest, start_ptr, n_bytes);
+  return 0;
+}
+
+int buffer_view(buffer_t *src, void *dest, unsigned int offset, unsigned int n_bytes) {
+  PREPARE_BUF_READ(src)
+  if (src->type == LINEAR) {
+    return buffer_view_raw(src, dest, offset, n_bytes);
+  }
+  else {
+    unsigned int linear_bytes_available = _rbuf_linear_bytes_read(src) - offset;
+    bool split_read = (n_bytes > linear_bytes_available) ? true : false;
+    if (split_read) {
+      memcpy(dest, src->read_ptr + offset, linear_bytes_available);
+      void *remaining_dest_buf = dest + linear_bytes_available;
+      memcpy(remaining_dest_buf, src->buf, n_bytes - linear_bytes_available);
+    }
+    else {
+      memcpy(dest, src->read_ptr + offset, n_bytes);
+    }
+    src->in_use = false;
+    return 0;
+  }
+}

@@ -162,3 +162,22 @@ TEST(rbuf_read) {
   buffer_delete(&rbuf_test);
   return TEST_SUCCESS;
 }
+
+TEST(buf_view) {
+  //set up
+  buffer_t *rbuf_test = NULL;
+  buffer_init(&rbuf_test, 8, RING);
+  _set_rbuf_ptrs(rbuf_test, 0, 6);
+  rbuf_test->state = NORMAL;
+  const unsigned char rbuf_ref[8] = {1,2,3,4,5,6,7,8};
+  memcpy(rbuf_test->buf, rbuf_ref, 8);
+  int rc;
+  char data_buf[3] = {'\0'};
+
+  rc = buffer_view(rbuf_test, data_buf, 2, 3);
+  const unsigned char data_ref[3] = {3,4,5};
+  ASSERT_TRUE(memcmp(data_buf, data_ref, 3) == 0);
+  //tear down
+  buffer_delete(&rbuf_test);
+  return TEST_SUCCESS;
+}
