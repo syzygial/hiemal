@@ -173,9 +173,10 @@ TEST(buf_view) {
   memcpy(rbuf_test->buf, rbuf_ref, 8);
   int rc;
   char data_buf[3] = {'\0'};
+  const unsigned char data_ref[3] = {3,4,5};
 
   rc = buffer_view(rbuf_test, data_buf, 2, 3);
-  const unsigned char data_ref[3] = {3,4,5};
+  ASSERT_TRUE(rc == 3);
   ASSERT_TRUE(memcmp(data_buf, data_ref, 3) == 0);
   //tear down
   buffer_delete(&rbuf_test);

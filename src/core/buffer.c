@@ -93,9 +93,9 @@ unsigned int _rbuf_linear_bytes_read(buffer_t *buf) {
   unsigned int read_pos = buf->read_ptr - buf->buf;
   switch(buf->state) {
     case FULL:
-      return 0;
-    case EMPTY:
       return buf->buf_len_bytes - read_pos;
+    case EMPTY:
+      return 0;
     case NORMAL:
       if (buf->read_ptr < buf->write_ptr) {
         return buf->write_ptr - buf->read_ptr;
@@ -122,6 +122,12 @@ int _set_lbuf_state(buffer_t *buf) {
 
 int _set_rbuf_state(buffer_t *buf, char mode) {
   ASSERT_RBUF(buf);
+  if (buf->read_ptr >= buf->buf + buf->buf_len_bytes) {
+    buf->read_ptr -= buf->buf_len_bytes;
+  }
+  if (buf->write_ptr >= buf->buf + buf->buf_len_bytes) {
+    buf->write_ptr -= buf->buf_len_bytes;
+  }
   if (buf->read_ptr != buf->write_ptr) {
     buf->state = NORMAL;
     return 0;
@@ -321,7 +327,9 @@ int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 int _lbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
   ASSERT_LBUF(src);
   PREPARE_BUF_READ(src)
-  memcpy(dest, src->read_ptr, n_bytes);
+  if (dest != NULL) {
+    memcpy(dest, src->read_ptr, n_bytes);
+  }
   src->read_ptr += n_bytes;
   set_buffer_state(src, '-');
   src->in_use = false;
@@ -339,16 +347,22 @@ int _rbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
   bool split_read = (n_bytes > linear_bytes_available) ? true : false;
   if (split_read) {
     //first read from buffer
-    memcpy(dest, src->read_ptr, linear_bytes_available);
+    if (dest != NULL) {
+      memcpy(dest, src->read_ptr, linear_bytes_available);
+    }
     //second read from buffer
     void *remaining_dest_buf = dest + linear_bytes_available;
-    memcpy(remaining_dest_buf, src->buf, \
-      n_bytes - linear_bytes_available);
+    if (dest != NULL) {
+      memcpy(remaining_dest_buf, src->buf, \
+        n_bytes - linear_bytes_available);
+    }
     src->read_ptr = src->buf + (n_bytes - linear_bytes_available);
     set_buffer_state(src, 'r');
   }
   else {
-    memcpy(dest, src->read_ptr, n_bytes);
+    if (dest != NULL) {
+      memcpy(dest, src->read_ptr, n_bytes);
+    }
     src->read_ptr += n_bytes;
     set_buffer_state(src, 'r');
   }
@@ -388,6 +402,6 @@ int buffer_view(buffer_t *src, void *dest, unsigned int offset, unsigned int n_b
       memcpy(dest, src->read_ptr + offset, n_bytes);
     }
     src->in_use = false;
-    return 0;
+    return n_bytes;
   }
 }

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "intern/dsp.h"
 #include "intern/core.h"
@@ -89,6 +90,7 @@ IMPL(fir_filter) {
   buf_array_t *outputs = (buf_array_t*)_outputs;
   unsigned long int b_order = 0;
   double_t *b = NULL;
+  buffer_t *hist = NULL;
   int ii;
   for (ii = 0; ii < kwargs->argc; ii++) {
     if (strcmp((kwargs->arg_names)[ii], "b") == 0) {
@@ -97,29 +99,54 @@ IMPL(fir_filter) {
     else if (strcmp((kwargs->arg_names)[ii], "b_order") == 0) {
       b_order = (unsigned long int)(kwargs->args[ii]);
     }
+    else if (strcmp((kwargs->arg_names)[ii], "hist") == 0) {
+      hist = (buffer_t*)(kwargs->args[ii]);
+    }
   }
   if ((b == NULL) || (b_order == 0)) {
-    return BAD_ARG;
+    return -BAD_ARG;
   }
   if ((inputs->n_buffer != 1) || (outputs->n_buffer != 1)) {
-    return MISSING_IMPL;
+    return -MISSING_IMPL;
   }
 
   buffer_t *src = *(inputs->buffers);
   buffer_t *dest = *(outputs->buffers);
 
+  unsigned int src_bytes = buffer_n_read_bytes(src);
+  if (src->state == EMPTY  || dest->state == FULL) {
+    return -EAGAIN;
+  }
+  if (src_bytes < n_bytes) {
+    n_bytes = src_bytes;
+  }
+
   unsigned int i = 0;
   void *fir_buf = malloc(sizeof(double_t)*b_order);
   memset(fir_buf, 0, sizeof(double_t)*b_order);
-  buffer_read(src, fir_buf, sizeof(double_t));
+  if (hist != NULL) {
+    unsigned int hist_samples = buffer_n_read_bytes(hist) / sizeof(double_t);
+    for (ii = 0; ii < hist_samples; ii++) {
+      buffer_read(hist, fir_buf, sizeof(double_t));
+      _buf_shift_up_64(fir_buf, sizeof(double_t)*b_order,1);
+    }
+  }
+  //buffer_read(src, fir_buf, sizeof(double_t));
   for (i = 0; i < n_samples; i++) {
+    buffer_read(src, fir_buf, sizeof(double_t));
+    if (hist != NULL) {
+      if (hist->state == FULL) {
+        buffer_read(hist, NULL, sizeof(double_t));
+      }
+      buffer_write(hist, fir_buf, sizeof(double_t));
+    }
     double_t new_sample = ddot('n', fir_buf, b, b_order);
     buffer_write(dest, &new_sample, sizeof(double_t));
     _buf_shift_up_64(fir_buf, sizeof(double_t)*b_order, 1);
-    buffer_read(src, fir_buf, sizeof(double_t));
+    //buffer_read(src, fir_buf, sizeof(double_t));
   }
   free(fir_buf);
-  return 0;
+  return n_bytes;
 }
 
 /*! \brief FIR Filter
@@ -162,6 +189,7 @@ int fir_filter(double_t *src, double_t *dest, double_t *b, \
   free(args);
   buffer_delete(&in_buf);
   buffer_delete(&out_buf);
+  return 0;
 }
 
 int dct_2_64f(buffer_t *src, void *dest, unsigned int n_samples) {

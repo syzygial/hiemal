@@ -19,6 +19,8 @@ typedef enum {NORMAL=0, EMPTY, FULL} buffer_state_t;
 int buffer_set_rpos(buffer_t *buf, unsigned int pos);
 int buffer_set_wpos(buffer_t *buf, unsigned int pos);
 int buffer_set_state(buffer_t *buf, buffer_state_t state);
+unsigned int buffer_n_write_bytes(buffer_t *buf);
+unsigned int buffer_n_read_bytes(buffer_t *buf);
 
 int buffer_init(buffer_t **buf, unsigned int n_bytes, \
   buffer_type_t type);
