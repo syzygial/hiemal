@@ -1,8 +1,7 @@
 /// \file intern/async.c
 #include <stdbool.h>
-#include <pthread.h>
 #include <stdlib.h>
-
+#include <stdio.h>
 #include "intern/async.h"
 
 
@@ -14,15 +13,22 @@ void *_async_loop(void *_h) {
       (*(h->fn_ptrs)[i])(1000, (h->inputs)[i], (h->outputs)[i], &((h->kwargs)[i]));
     }
   }
-  pthread_exit(NULL);
+  //pthread_exit(NULL);
 }
 
 void async_loop_dispatch(async_handle_t *h) {
   // TODO: run this in a separate thread
-  pthread_t loop_thread;
-  pthread_create(&loop_thread, NULL, _async_loop, (void*)h);
+  h->thread_created = true;
+  h->loop_active = true;
+  pthread_t *loop_thread = &(h->thread_id);
+  pthread_create(loop_thread, NULL, _async_loop, (void*)h);
 }
 
+void async_loop_stop(async_handle_t *h) {
+  h->thread_created = false;
+  h->loop_active = false;
+  pthread_join(h->thread_id, NULL);
+}
 /*! \brief Initialize async event loop
 * \param h address of ``async_handle_t*`` handle
 * \return exit code
@@ -31,9 +37,10 @@ int async_loop_init(async_handle_t **h) {
   *h = (async_handle_t*)malloc(sizeof(async_handle_t));
   (*h)->loop_active = (bool*)malloc(sizeof(bool));
   (*h)->thread_created = (bool*)malloc(sizeof(bool));
-  *((*h)->loop_active) = false;
-  *((*h)->thread_created) = false;
+  (*h)->loop_active = false;
+  (*h)->thread_created = false;
   (*h)->n_fn = 0;
+  (*h)->thread_id = (pthread_t)NULL;
   return 0;
 }
 
@@ -42,8 +49,6 @@ int async_loop_init(async_handle_t **h) {
 * \return exit code
 */
 int async_loop_delete(async_handle_t **h) {
-  free((*h)->loop_active);
-  free((*h)->thread_created);
   free(*h);
   *h = NULL;
   return 0;

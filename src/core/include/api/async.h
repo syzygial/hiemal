@@ -17,7 +17,8 @@ typedef struct _async_args {
 
 int async_loop_init(async_handle_t **h);
 int async_loop_delete(async_handle_t **h);
-
+void async_loop_dispatch(async_handle_t *h);
+void async_loop_stop(async_handle_t *h);
 int async_loop_add_fn(async_handle_t *h, async_args_t args);
 
 #endif

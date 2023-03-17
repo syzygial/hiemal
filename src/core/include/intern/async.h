@@ -3,11 +3,13 @@
 
 #include "api/async.h"
 #include "core.h"
-#include <stdbool.h>
 
+#include <stdbool.h>
+#include <pthread.h>
 struct _async_handle {
-  bool *loop_active;
-  bool *thread_created;
+  bool loop_active;
+  bool thread_created;
+  pthread_t thread_id;
   unsigned int n_fn;
   void *inputs[ASYNC_LOOP_MAX_FN];
   void *outputs[ASYNC_LOOP_MAX_FN];
