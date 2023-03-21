@@ -42,18 +42,21 @@ TEST(async_loop_add_fn) {
 TEST(async_loop_dispatch) {
   // setup
   buffer_t *src = NULL;
+  buffer_t *buf = NULL;
   buffer_t *dest = NULL;
   double_t input_data[5] = {1.1, 2.2, 3.3, 4.4, 5.5};
-  double_t output_data_ref[5] = {2.2, 4.4, 6.6, 8.8, 11.0};
+  double_t output_data_ref[5] = {4.4, 8.8, 13.2, 17.6, 22};
   buffer_init_ext(&src, 5*sizeof(double_t), RING, input_data);
   src->state = FULL;
+  buffer_init(&buf, 5*sizeof(double_t), RING);
   buffer_init(&dest, 5*sizeof(double_t), RING);
   int rc;
   double_t tol = 1e-5;
   async_handle_t *h = NULL;
   async_loop_init(&h);
   
-  async_loop_add_fn(h, times_two_async(src, dest));
+  async_loop_add_fn(h, times_two_async(src, buf));
+  async_loop_add_fn(h, times_two_async(buf, dest));
   async_loop_dispatch(h);
   while(dest->state != FULL);
   async_loop_stop(h);
@@ -62,6 +65,7 @@ TEST(async_loop_dispatch) {
   // teardown
   async_loop_delete(&h);
   buffer_delete(&src);
+  buffer_delete(&buf);
   buffer_delete(&dest);  
   return TEST_SUCCESS;
 }
