@@ -1,13 +1,18 @@
 #include "intern/core.h"
 #include "intern/async.h"
 #include "intern/io.h"
+#include "intern/buffer.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 
 IMPL(src_fd) {
   long int fd = (long int)_inputs;
-  void *buf = (void*)_outputs;
-  read(fd, buf, n_bytes);
+  buffer_t *buf = (buffer_t*)_outputs;
+  void *tmp_buf = (void*)malloc(n_bytes);
+  read(fd, tmp_buf, n_bytes);
+  buffer_write(buf, tmp_buf, n_bytes);
+  free(tmp_buf);
   return 0;  
 }
 /*! \brief Source (unix FD) 
@@ -17,8 +22,10 @@ IMPL(src_fd) {
 * \return exit code
 */
 int src_fd(int fd, unsigned int n_bytes, void *buf) {
-  kwargs_t kwargs;
-  src_fd_impl(n_bytes, (void*)(long int)fd, (void*) buf, &kwargs);
+  buffer_t *dest = NULL;
+  buffer_init_ext(&dest, n_bytes, RING, buf);
+  src_fd_impl(n_bytes, (void*)(long int)fd, (void*)dest, NULL);
+  buffer_delete(&dest);
   return 0;
 }
 
@@ -34,9 +41,12 @@ async_args_t src_fd_async(int fd, unsigned int n_bytes, void *buf) {
 
 
 IMPL(sink_fd) {
-  void *buf = (void*)_inputs;
+  buffer_t *buf = (buffer_t*)_inputs;
   long int fd = (long int)_outputs;
-  write(fd, buf, n_bytes);
+  void *tmp_buf = (void*)malloc(n_bytes);
+  buffer_read(buf, tmp_buf, n_bytes);
+  write(fd, tmp_buf, n_bytes);
+  free(tmp_buf);
   return 0;  
 }
 
@@ -47,8 +57,11 @@ IMPL(sink_fd) {
 * \return exit code
 */
 int sink_fd(int fd, unsigned int n_bytes, void *buf) {
-  kwargs_t kwargs;
-  sink_fd_impl(n_bytes, (void*)buf, (void*)(long int)fd, &kwargs);
+  buffer_t *src = NULL;
+  buffer_init_ext(&src, n_bytes, RING, buf);
+  src->state = FULL;
+  sink_fd_impl(n_bytes, (void*)src, (void*)(long int)fd, NULL);
+  buffer_delete(&src);
   return 0;
 }
 
@@ -65,8 +78,11 @@ async_args_t sink_fd_async(int fd, unsigned int n_bytes, void *buf) {
 
 IMPL(src_file) {
   FILE *f = (FILE*)_inputs;
-  void *buf = (void*)_outputs;
-  fread(buf, 1, n_bytes, f);
+  buffer_t *buf = (buffer_t*)_outputs;
+  void *tmp_buf = (void*)malloc(n_bytes);
+  fread(tmp_buf, 1, n_bytes, f);
+  buffer_write(buf, tmp_buf, n_bytes);
+  free(tmp_buf);
   return 0;  
 }
 
@@ -77,8 +93,10 @@ IMPL(src_file) {
 * \return exit code
 */
 int src_file(FILE *f, unsigned int n_bytes, void *buf) {
-  kwargs_t kwargs;
-  src_file_impl(n_bytes, (void*)f, (void*)buf, &kwargs);
+  buffer_t *dest = NULL;
+  buffer_init_ext(&dest, n_bytes, RING, buf);
+  src_file_impl(n_bytes, (void*)f, (void*)dest, NULL);
+  buffer_delete(&dest);
   return 0;
 }
 
@@ -94,9 +112,11 @@ async_args_t src_file_async(FILE *f, unsigned int n_bytes, void *buf) {
 
 
 IMPL(sink_file) {
-  void *buf = (void*)_inputs;
+  buffer_t *buf = (buffer_t*)_inputs;
   FILE* f = (FILE*)_outputs;
-  fwrite(buf, 1, n_bytes, f);
+  void *tmp_buf = (void*)malloc(n_bytes);
+  buffer_read(buf, tmp_buf, n_bytes);
+  fwrite(tmp_buf, 1, n_bytes, f);
   return 0;  
 }
 
@@ -107,8 +127,11 @@ IMPL(sink_file) {
 * \return exit code
 */
 int sink_file(FILE *f, unsigned int n_bytes, void *buf) {
-  kwargs_t kwargs;
-  sink_file_impl(n_bytes, (void*)buf, (void*)f, &kwargs);
+  buffer_t *src = NULL;
+  buffer_init_ext(&src, n_bytes, RING, buf);
+  src->state = FULL;
+  sink_file_impl(n_bytes, (void*)src, (void*)f, NULL);
+  buffer_delete(&src);
   return 0;
 }
 
