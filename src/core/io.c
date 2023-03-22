@@ -39,7 +39,7 @@ int src_fd(int fd, unsigned int n_bytes, void *buf) {
   return rc;
 }
 
-async_args_t src_fd_async(int fd, unsigned int n_bytes, buffer_t *buf) {
+async_args_t src_fd_async(int fd, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = src_fd_impl;
@@ -80,7 +80,7 @@ int sink_fd(int fd, unsigned int n_bytes, void *buf) {
   return rc;
 }
 
-async_args_t sink_fd_async(int fd, unsigned int n_bytes, buffer_t *buf) {
+async_args_t sink_fd_async(int fd, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = sink_fd_impl;
@@ -125,7 +125,7 @@ int src_file(FILE *f, unsigned int n_bytes, void *buf) {
   return rc;
 }
 
-async_args_t src_file_async(FILE *f, unsigned int n_bytes, buffer_t *buf) {
+async_args_t src_file_async(FILE *f, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = src_file_impl;
@@ -146,6 +146,7 @@ IMPL(sink_file) {
   void *tmp_buf = (void*)malloc(n_bytes);
   buffer_read(buf, tmp_buf, n_bytes);
   fwrite(tmp_buf, 1, n_bytes, f);
+  free(tmp_buf);
   return n_bytes;  
 }
 
@@ -165,7 +166,7 @@ int sink_file(FILE *f, unsigned int n_bytes, void *buf) {
   return rc;
 }
 
-async_args_t sink_file_async(FILE *f, unsigned int n_bytes, buffer_t *buf) {
+async_args_t sink_file_async(FILE *f, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = sink_file_impl;

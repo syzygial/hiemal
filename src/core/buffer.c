@@ -267,6 +267,9 @@ int buffer_delete(buffer_t **buf) {
 
 int _lbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
   ASSERT_LBUF(dest);
+  if (n_bytes == 0) {
+    return 0;
+  }
   PREPARE_BUF_WRITE(dest)
   memcpy(dest->write_ptr, src, n_bytes);
   dest->write_ptr += n_bytes;
@@ -277,6 +280,9 @@ int _lbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 
 int _rbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
   ASSERT_RBUF(dest);
+  if (n_bytes == 0) {
+    return 0;
+  }
   PREPARE_BUF_WRITE(dest)
   void *linear_buf_end = dest->buf + dest->buf_len_bytes;
   unsigned int linear_bytes_available = _rbuf_linear_bytes_write(dest);
@@ -326,6 +332,9 @@ int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 
 int _lbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
   ASSERT_LBUF(src);
+  if (n_bytes == 0) {
+    return 0;
+  }
   PREPARE_BUF_READ(src)
   if (dest != NULL) {
     memcpy(dest, src->read_ptr, n_bytes);
@@ -340,6 +349,9 @@ int _rbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
   //ASSERT_RBUF(src);
   if (src->type != RING) { 
     return BAD_ARG; 
+  }
+  if (n_bytes == 0) {
+    return 0;
   }
   PREPARE_BUF_READ(src)
   void *linear_buf_end = src->buf + src->buf_len_bytes;
