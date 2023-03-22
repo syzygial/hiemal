@@ -5,15 +5,24 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 IMPL(src_fd) {
   long int fd = (long int)_inputs;
+  int cur_pos = lseek(fd, 0, SEEK_CUR);
+  struct stat s;
+  fstat(fd, &s);
+  int fd_size = s.st_size;
+  int bytes_available = fd_size - cur_pos;
+  if (n_bytes > bytes_available) {
+    n_bytes = bytes_available;
+  }
   buffer_t *buf = (buffer_t*)_outputs;
   void *tmp_buf = (void*)malloc(n_bytes);
   read(fd, tmp_buf, n_bytes);
   buffer_write(buf, tmp_buf, n_bytes);
   free(tmp_buf);
-  return 0;  
+  return n_bytes;  
 }
 /*! \brief Source (unix FD) 
 * \param fd file descriptor
@@ -22,14 +31,15 @@ IMPL(src_fd) {
 * \return exit code
 */
 int src_fd(int fd, unsigned int n_bytes, void *buf) {
+  int rc;
   buffer_t *dest = NULL;
   buffer_init_ext(&dest, n_bytes, RING, buf);
-  src_fd_impl(n_bytes, (void*)(long int)fd, (void*)dest, NULL);
+  rc = src_fd_impl(n_bytes, (void*)(long int)fd, (void*)dest, NULL);
   buffer_delete(&dest);
-  return 0;
+  return rc;
 }
 
-async_args_t src_fd_async(int fd, unsigned int n_bytes, void *buf) {
+async_args_t src_fd_async(int fd, unsigned int n_bytes, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = src_fd_impl;
@@ -42,12 +52,16 @@ async_args_t src_fd_async(int fd, unsigned int n_bytes, void *buf) {
 
 IMPL(sink_fd) {
   buffer_t *buf = (buffer_t*)_inputs;
+  int bytes_available = buffer_n_read_bytes(buf);
+  if (n_bytes > bytes_available) {
+    n_bytes = bytes_available;
+  }
   long int fd = (long int)_outputs;
   void *tmp_buf = (void*)malloc(n_bytes);
   buffer_read(buf, tmp_buf, n_bytes);
   write(fd, tmp_buf, n_bytes);
   free(tmp_buf);
-  return 0;  
+  return n_bytes;  
 }
 
 /*! \brief Sink (unix FD) 
@@ -57,15 +71,16 @@ IMPL(sink_fd) {
 * \return exit code
 */
 int sink_fd(int fd, unsigned int n_bytes, void *buf) {
+  int rc;
   buffer_t *src = NULL;
   buffer_init_ext(&src, n_bytes, RING, buf);
   src->state = FULL;
-  sink_fd_impl(n_bytes, (void*)src, (void*)(long int)fd, NULL);
+  rc = sink_fd_impl(n_bytes, (void*)src, (void*)(long int)fd, NULL);
   buffer_delete(&src);
-  return 0;
+  return rc;
 }
 
-async_args_t sink_fd_async(int fd, unsigned int n_bytes, void *buf) {
+async_args_t sink_fd_async(int fd, unsigned int n_bytes, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = sink_fd_impl;
@@ -78,12 +93,21 @@ async_args_t sink_fd_async(int fd, unsigned int n_bytes, void *buf) {
 
 IMPL(src_file) {
   FILE *f = (FILE*)_inputs;
+  int fd = fileno(f);
+  int cur_pos = lseek(fd, 0, SEEK_CUR);
+  struct stat s;
+  fstat(fd, &s);
+  int fd_size = s.st_size;
+  int bytes_available = fd_size - cur_pos;
+  if (n_bytes > bytes_available) {
+    n_bytes = bytes_available;
+  }
   buffer_t *buf = (buffer_t*)_outputs;
   void *tmp_buf = (void*)malloc(n_bytes);
   fread(tmp_buf, 1, n_bytes, f);
   buffer_write(buf, tmp_buf, n_bytes);
   free(tmp_buf);
-  return 0;  
+  return n_bytes;  
 }
 
 /*! \brief Source (file) 
@@ -93,14 +117,15 @@ IMPL(src_file) {
 * \return exit code
 */
 int src_file(FILE *f, unsigned int n_bytes, void *buf) {
+  int rc;
   buffer_t *dest = NULL;
   buffer_init_ext(&dest, n_bytes, RING, buf);
-  src_file_impl(n_bytes, (void*)f, (void*)dest, NULL);
+  rc = src_file_impl(n_bytes, (void*)f, (void*)dest, NULL);
   buffer_delete(&dest);
-  return 0;
+  return rc;
 }
 
-async_args_t src_file_async(FILE *f, unsigned int n_bytes, void *buf) {
+async_args_t src_file_async(FILE *f, unsigned int n_bytes, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = src_file_impl;
@@ -113,11 +138,15 @@ async_args_t src_file_async(FILE *f, unsigned int n_bytes, void *buf) {
 
 IMPL(sink_file) {
   buffer_t *buf = (buffer_t*)_inputs;
+  int bytes_available = buffer_n_read_bytes(buf);
+  if (n_bytes > bytes_available) {
+    n_bytes = bytes_available;
+  }
   FILE* f = (FILE*)_outputs;
   void *tmp_buf = (void*)malloc(n_bytes);
   buffer_read(buf, tmp_buf, n_bytes);
   fwrite(tmp_buf, 1, n_bytes, f);
-  return 0;  
+  return n_bytes;  
 }
 
 /*! \brief Sink (file) 
@@ -127,15 +156,16 @@ IMPL(sink_file) {
 * \return exit code
 */
 int sink_file(FILE *f, unsigned int n_bytes, void *buf) {
+  int rc;
   buffer_t *src = NULL;
   buffer_init_ext(&src, n_bytes, RING, buf);
   src->state = FULL;
-  sink_file_impl(n_bytes, (void*)src, (void*)f, NULL);
+  rc = sink_file_impl(n_bytes, (void*)src, (void*)f, NULL);
   buffer_delete(&src);
-  return 0;
+  return rc;
 }
 
-async_args_t sink_file_async(FILE *f, unsigned int n_bytes, void *buf) {
+async_args_t sink_file_async(FILE *f, unsigned int n_bytes, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
   async_args.fn = sink_file_impl;

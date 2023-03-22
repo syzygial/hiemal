@@ -17,7 +17,7 @@ TEST(src_fd) {
   char buf[5];
   ASSERT_TRUE(test_fd > 0);
   rc = src_fd(test_fd, n_bytes, buf);
-  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(rc == n_bytes);
   ASSERT_TRUE(memcmp(buf, test_data, n_bytes) == 0);
 
   // tear down
@@ -35,7 +35,7 @@ TEST(sink_fd) {
   // test
   int rc;
   rc = sink_fd(test_fd, n_bytes, test_data);
-  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(rc == n_bytes);
   rewind(tmp_file);
   char buf[5];
   fread(buf, 1, n_bytes, tmp_file);
@@ -58,7 +58,7 @@ TEST(src_file) {
   int rc;
   char buf[5];
   rc = src_file(tmp_file, n_bytes, buf);
-  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(rc == n_bytes);
   ASSERT_TRUE(memcmp(buf, test_data, n_bytes) == 0);
 
   // tear down
@@ -75,7 +75,7 @@ TEST(sink_file) {
   // test
   int rc;
   rc = sink_file(tmp_file, n_bytes, test_data);
-  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(rc == n_bytes);
   rewind(tmp_file);
   char buf[5];
   fread(buf, 1, n_bytes, tmp_file);
