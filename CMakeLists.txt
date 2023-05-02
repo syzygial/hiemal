@@ -5,6 +5,9 @@ execute_process(COMMAND "git" "status"
   RESULT_VARIABLE GIT_STATUS_RET OUTPUT_QUIET ERROR_QUIET)
 
 project(HIEMAL VERSION 0.1.0)
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules ${CMAKE_MODULE_PATH})
+
 if (GIT_STATUS_RET EQUAL "0")
   # get git commit hash to put into the version string
   execute_process(COMMAND "git" "rev-parse" "--short" "HEAD" 
@@ -45,6 +48,16 @@ find_package (Protobuf)
 if(NOT Protobuf_FOUND)
   set(WITH_PROTOBUF "OFF")
 endif()
+
+set(WITH_PULSEAUDIO "ON" CACHE BOOL "Use PulseAudio")  
+find_package (PulseAudio)
+if(NOT PulseAudio_FOUND)
+  set(WITH_PULSEAUDIO "OFF")
+else()
+  message("** Linking with libpulse **")
+  target_link_libraries(hiemal pulse)
+endif()
+
 # check whether or not static or dynamic libraries were found, 
 # prefer static if both are present
 if(WITH_PROTOBUF)
@@ -116,6 +129,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "  ALSA: YES")
   else()
     message(STATUS "  ALSA: NO")
+  endif()
+  if(WITH_PULSEAUDIO)
+    message(STATUS "  PulseAudio: YES (${PulseAudio_LIBRARIES})")
+  else()
+    message(STATUS "  PulseAudio: NO")
   endif()
   message(STATUS "")
 endif()

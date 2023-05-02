@@ -1,4 +1,3 @@
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules ${CMAKE_MODULE_PATH})
 find_package(Doxygen)
 find_package(Sphinx)
 #set(DOXY_FILES ../src/core/fmt.hpp

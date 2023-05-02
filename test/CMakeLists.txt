@@ -1,4 +1,4 @@
-SET(TEST_FILES test_buffer.c test_dsp.c test_math.c test_io.c test_async.c)
+SET(TEST_FILES test_buffer.c test_dsp.c test_math.c test_io.c test_async.c test_alsa.c test_pulse.c)
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)
 endif()
@@ -8,6 +8,16 @@ set(GENDRIVER_EXCLUDED_FILES test_main.c test_common.c)
 # skip protobuf-related tests
 if(NOT WITH_PROTOBUF)
   list(APPEND GENDRIVER_EXCLUDED_FILES test_pb_c_wrap.c)
+endif()
+
+# skip ALSA-related tests
+if(NOT WITH_ALSA)
+  list(APPEND GENDRIVER_EXCLUDED_FILES test_alsa.c)
+endif()
+
+# skip ALSA-related tests
+if(NOT WITH_PULSEAUDIO)
+  list(APPEND GENDRIVER_EXCLUDED_FILES test_pulse.c)
 endif()
 
 add_executable(run_tests EXCLUDE_FROM_ALL test_main.c test_common.c ${TEST_FILES})

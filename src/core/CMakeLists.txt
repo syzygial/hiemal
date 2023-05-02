@@ -11,7 +11,17 @@ target_sources(hiemal PRIVATE
   signal_chain.c 
   io.c
   info.c
-  logging.c)
+  logging.c
+  device.c
+  backend.c)
+
+if(WITH_ALSA)
+  target_sources(hiemal PRIVATE alsa.c)
+endif()
+
+if(WITH_PULSEAUDIO)
+  target_sources(hiemal PRIVATE pulse.c)
+endif()
 
 if(WITH_PROTOBUF)
   target_sources(hiemal PRIVATE recording.c)
