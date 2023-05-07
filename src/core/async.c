@@ -150,6 +150,7 @@ void *_async_loop(void *_h) {
   int i;
   int i_fn;
   int n_samples;
+  h->loop_active = true;
   while (h->loop_active) {
     poll(h->async_fds,h->n_fds, -1);
     n_samples = 0;
@@ -165,18 +166,17 @@ void *_async_loop(void *_h) {
         (*(h->fn_ptrs)[i_fn])(n_samples, (h->inputs)[i_fn], (h->outputs)[i_fn], &((h->kwargs)[i_fn]));
       }
     }
-    usleep(10000);
   }
-  // pthread_exit(NULL);
 }
 
 void async_loop_dispatch(async_handle_t *h)
 {
-  // TODO: run this in a separate thread
-  h->thread_created = true;
-  h->loop_active = true;
-  pthread_t *loop_thread = &(h->thread_id);
-  pthread_create(loop_thread, NULL, _async_loop, (void *)h);
+  if(!(h->loop_active)) {
+    h->thread_created = true;
+    pthread_t *loop_thread = &(h->thread_id);
+    pthread_create(loop_thread, NULL, _async_loop, (void *)h);
+    while(!(h->loop_active));
+  }
 }
 
 void async_loop_stop(async_handle_t *h)

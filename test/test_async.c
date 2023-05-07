@@ -57,8 +57,8 @@ TEST(async_loop_dispatch) {
   async_loop_init(&h);
   async_loop_add_fn(h, times_two_async(src, buf));
   async_loop_add_fn(h, times_two_async(buf, dest));
-  buffer_write(src, input_data, 5*sizeof(double_t));
   async_loop_dispatch(h);
+  buffer_write(src, input_data, 5*sizeof(double_t));
   while(dest->state != FULL);
   async_loop_stop(h);
   ASSERT_ALMOST_EQUAL_1D(dest->buf, output_data_ref, 5, tol);
