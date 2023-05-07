@@ -1,4 +1,9 @@
-SET(TEST_FILES test_buffer.c test_dsp.c test_math.c test_io.c test_async.c)
+SET(TEST_FILES 
+  test_buffer.c 
+  test_dsp.c 
+  test_math.c 
+  test_io.c 
+  test_async.c)
 
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)

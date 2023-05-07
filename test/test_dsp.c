@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "intern/core.h"
+#include "intern/common.h"
 #include "intern/dsp.h"
 #include "test_common.h"
 

@@ -1,5 +1,7 @@
-#ifndef _CORE_H
-#define _CORE_H
+#ifndef _COMMON_H
+#define _COMMON_H
+
+#include <stdint.h>
 
 #include "cmake_info.h"
 

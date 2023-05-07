@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "intern/core.h"
+#include "intern/common.h"
 #include "intern/buffer.h"
 #include "intern/recording.h"
 

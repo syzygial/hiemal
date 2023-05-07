@@ -4,7 +4,7 @@
 #include <errno.h>
 
 #include "intern/dsp.h"
-#include "intern/core.h"
+#include "intern/common.h"
 #include "intern/math.h"
 
 

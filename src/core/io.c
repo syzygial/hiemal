@@ -1,8 +1,9 @@
-#include "intern/core.h"
+#include "intern/common.h"
 #include "intern/async.h"
 #include "intern/io.h"
 #include "intern/buffer.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -42,6 +43,8 @@ int src_fd(int fd, unsigned int n_bytes, void *buf) {
 async_args_t src_fd_async(int fd, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
+  async_args.fd = fd;
+  async_args.fd_type = EXTERN;
   async_args.fn = src_fd_impl;
   async_args.inputs = (void*)(long int)fd;
   async_args.outputs = (void*)buf;
@@ -81,8 +84,15 @@ int sink_fd(int fd, unsigned int n_bytes, void *buf) {
 }
 
 async_args_t sink_fd_async(int fd, buffer_t *buf) {
+  int pipe_fds[2];
+  pipe(pipe_fds);
+  buffer_fd_set_t *fd_set = buf->fd_set;
+  buffer_fd_set_insert(fd_set, pipe_fds[1]);
+
   async_args_t async_args;
   kwargs_t kwargs;
+  async_args.fd = pipe_fds[0];
+  async_args.fd_type = INTERN_PIPE;
   async_args.fn = sink_fd_impl;
   async_args.inputs = (void*)buf;
   async_args.outputs = (void*)(long int)fd;
@@ -128,6 +138,8 @@ int src_file(FILE *f, unsigned int n_bytes, void *buf) {
 async_args_t src_file_async(FILE *f, buffer_t *buf) {
   async_args_t async_args;
   kwargs_t kwargs;
+  async_args.fd = fileno(f);
+  async_args.fd_type = EXTERN;
   async_args.fn = src_file_impl;
   async_args.inputs = (void*)f;
   async_args.outputs = (void*)buf;
@@ -167,8 +179,15 @@ int sink_file(FILE *f, unsigned int n_bytes, void *buf) {
 }
 
 async_args_t sink_file_async(FILE *f, buffer_t *buf) {
+  int pipe_fds[2];
+  pipe(pipe_fds);
+  buffer_fd_set_t *fd_set = buf->fd_set;
+  buffer_fd_set_insert(fd_set, pipe_fds[1]);
+
   async_args_t async_args;
   kwargs_t kwargs;
+  async_args.fd = pipe_fds[0];
+  async_args.fd_type = INTERN_PIPE;
   async_args.fn = sink_file_impl;
   async_args.inputs = (void*)buf;
   async_args.outputs = (void*)f;

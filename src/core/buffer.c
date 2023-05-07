@@ -10,7 +10,7 @@
 #ifdef WITH_PROTOBUF
 #include "api/recording.h"
 #endif
-#include "intern/core.h"
+#include "intern/common.h"
 #include "intern/buffer.h"
 
 #include "cmake_info.h"
@@ -34,6 +34,91 @@
 *   \var _buffer::ext_buf
 *   was the buffer initialized externally (i.e. not with ``buffer_init()``)?
 */
+
+typedef struct _buffer_fd_set_node buffer_fd_set_node;
+
+struct _buffer_fd_set_node {
+  buffer_fd_set_node *next;
+  int fd;
+};
+
+struct _buffer_fd_set {
+  buffer_fd_set_node *head;
+  int n_fds;
+};
+
+int buffer_fd_set_init(buffer_fd_set_t** fd_set) {
+  buffer_fd_set_node *fd_head = 
+    (buffer_fd_set_node*)malloc(sizeof(buffer_fd_set_node));
+  fd_head->fd = -1;
+  fd_head->next = NULL;
+  *fd_set = (buffer_fd_set_t*)malloc(sizeof(buffer_fd_set_t));
+  (*fd_set)->head = fd_head;
+  return 0;
+}
+
+int buffer_fd_set_delete(buffer_fd_set_t **fd_set) {
+  buffer_fd_set_node *fd_itr = (*fd_set)->head;
+  buffer_fd_set_node *fd_next = fd_itr;
+  
+  while(fd_itr != NULL) {
+    fd_next = fd_itr->next;
+    free(fd_itr);
+    fd_itr = fd_next;    
+  }
+  free(*fd_set);
+  *fd_set = NULL;
+  return 0;
+}
+
+int buffer_fd_set_insert(buffer_fd_set_t *fd_set, int fd) {
+  buffer_fd_set_node *fd_itr = fd_set->head;
+  buffer_fd_set_node *fd_prev = fd_itr;
+
+  while(fd_itr != NULL) {
+    if (fd == fd_itr->fd) {
+      return 0;
+    }
+    fd_prev = fd_itr;
+    fd_itr = fd_itr->next;
+  }
+  buffer_fd_set_node *new_fd_node = 
+    (buffer_fd_set_node*)malloc(sizeof(buffer_fd_set_node));
+  new_fd_node->next = NULL;
+  new_fd_node->fd = fd;
+
+  fd_prev->next = new_fd_node;
+  fd_set->n_fds += 1;
+  return 0;
+}
+
+int buffer_signal_fds(buffer_fd_set_t *fd_set, uint32_t n_bytes) {
+  buffer_fd_set_node *fd_itr = fd_set->head->next;
+  while (fd_itr != NULL) {
+    write(fd_itr->fd, &n_bytes, 4);
+    fd_itr = fd_itr->next;
+  }
+  return 0;
+}
+
+int buffer_fd_hold(buffer_t *buf) {
+  buf->fd_hold = true;
+  return 0;
+}
+
+int buffer_fd_release(buffer_t *buf) {
+  buf->fd_hold = false;
+  return 0;
+}
+
+int buffer_fd_drain(buffer_t *buf) {
+  if (buf->state == EMPTY || buf->fd_hold) {
+    return 0;
+  }
+  int bytes_available = buffer_n_read_bytes(buf);
+  buffer_signal_fds(buf->fd_set, bytes_available);
+  return 0;
+}
 
 #define ASSERT_RBUF(buf) if (buf->type != RING) { return BAD_ARG; }
 #define ASSERT_LBUF(buf) if (buf->type != LINEAR) { return BAD_ARG; }
@@ -208,6 +293,9 @@ int buffer_init(buffer_t **buf, unsigned int n_bytes, buffer_type_t type) {
   (*buf)->in_use = false;
   (*buf)->ext_buf = false;
   (*buf)->r = NULL;
+  (*buf)->r_id = 0;
+  buffer_fd_set_init(&((*buf)->fd_set));
+  (*buf)->fd_hold = false;
   return 0;
 }
 
@@ -231,6 +319,8 @@ int buffer_init_ext(buffer_t **buf, unsigned int n_bytes, buffer_type_t type, vo
   (*buf)->ext_buf = true;
   (*buf)->r = NULL;
   (*buf)->r_id = 0;
+  buffer_fd_set_init(&((*buf)->fd_set));
+  (*buf)->fd_hold = false;
   return 0;
 }
 
@@ -250,6 +340,7 @@ int buffer_delete(buffer_t **buf) {
   if (!((*buf)->ext_buf)) {
     free((*buf)->buf);
   }
+  buffer_fd_set_delete(&((*buf)->fd_set));
   free(*buf);
   *buf = NULL;
   return 0;
@@ -307,6 +398,7 @@ int _rbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 }
 
 int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
+  uint32_t rc;
   #ifdef WITH_PROTOBUF
   if(dest->r != NULL) {
     hm_recording_write(dest->r, dest->r_id, src, n_bytes);
@@ -314,9 +406,17 @@ int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
   #endif
   switch(dest->type) {
     case LINEAR:
-      return _lbuf_write(dest, src, n_bytes);
+      rc = _lbuf_write(dest, src, n_bytes);
+      if(!(dest->fd_hold)) {
+        buffer_signal_fds(dest->fd_set, rc);
+      }
+      return rc;
     case RING:
-      return _rbuf_write(dest, src, n_bytes);
+      rc = _rbuf_write(dest, src, n_bytes);
+      if(!(dest->fd_hold)) {
+        buffer_signal_fds(dest->fd_set, rc);
+      }
+      return rc;
   }
 }
 

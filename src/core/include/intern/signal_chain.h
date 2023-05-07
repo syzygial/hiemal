@@ -2,7 +2,7 @@
 #define _SIGNAL_CHAIN_H
 
 #include "intern/buffer.h"
-#include "intern/core.h"
+#include "intern/common.h"
 #include "intern/async.h"
 
 #define SIGCHAIN_BUF_MAX 100

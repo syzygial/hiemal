@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "core.h"
+#include "common.h"
 #include "api/recording.h"
 
 #include "hm_protobuf.h"

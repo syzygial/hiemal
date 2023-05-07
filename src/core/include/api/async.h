@@ -1,12 +1,16 @@
 #ifndef _INTERN_ASYNC_H
 #define _INTERN_ASYNC_H
 
-#include "intern/core.h"
+#include "intern/common.h"
 
 #define ASYNC_LOOP_MAX_FN 100
 
+typedef enum {INTERN_PIPE, EXTERN, BAD_FD} fd_type_t;
+
 typedef struct _async_handle async_handle_t;
 typedef struct _async_args {
+  int fd;
+  fd_type_t fd_type;
   int (*fn)(IMPL_ARGS);
   void *inputs;
   void *outputs;

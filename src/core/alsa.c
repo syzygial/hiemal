@@ -4,7 +4,7 @@
 
 #include "intern/alsa.h"
 #include "intern/buffer.h"
-#include "intern/core.h"
+#include "intern/common.h"
 
 int hm_alsa_n_cards() {
   int n_cards = -1;

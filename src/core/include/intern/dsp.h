@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "buffer.h"
-#include "core.h"
+#include "common.h"
 int _buf_shift_down_64(void *buf, const unsigned int n_bytes, 
     const unsigned int n_shift);
 

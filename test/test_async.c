@@ -2,6 +2,8 @@
 #include "mock/mock_async.h"
 #include "test_common.h"
 #include <stddef.h>
+#include <stdio.h>
+#include <unistd.h>
 
 TEST(async_loop_init_delete) {
   async_handle_t *h = NULL;
@@ -46,17 +48,16 @@ TEST(async_loop_dispatch) {
   buffer_t *dest = NULL;
   double_t input_data[5] = {1.1, 2.2, 3.3, 4.4, 5.5};
   double_t output_data_ref[5] = {4.4, 8.8, 13.2, 17.6, 22};
-  buffer_init_ext(&src, 5*sizeof(double_t), RING, input_data);
-  src->state = FULL;
+  buffer_init(&src, 5*sizeof(double_t), RING);
   buffer_init(&buf, 5*sizeof(double_t), RING);
   buffer_init(&dest, 5*sizeof(double_t), RING);
   int rc;
   double_t tol = 1e-5;
   async_handle_t *h = NULL;
   async_loop_init(&h);
-  
   async_loop_add_fn(h, times_two_async(src, buf));
   async_loop_add_fn(h, times_two_async(buf, dest));
+  buffer_write(src, input_data, 5*sizeof(double_t));
   async_loop_dispatch(h);
   while(dest->state != FULL);
   async_loop_stop(h);
@@ -67,5 +68,29 @@ TEST(async_loop_dispatch) {
   buffer_delete(&src);
   buffer_delete(&buf);
   buffer_delete(&dest);  
+  return TEST_SUCCESS;
+}
+
+TEST(async_fd_map) {
+  async_fd_map_t *test_map = NULL;
+  int rc = async_fd_map_init(&test_map);
+  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(test_map != NULL);
+
+  rc = async_fd_map_insert(test_map, 3, INTERN_PIPE, 7);
+  ASSERT_TRUE(rc == 0);
+  rc = async_fd_map_insert(test_map, 3, EXTERN, 2);
+  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(async_fd_map_n_keys(test_map) == 1);
+
+  rc = async_fd_map_get_index(test_map, 3);
+  ASSERT_TRUE(rc == 7)
+  rc = async_fd_map_get_index(test_map, 4);
+  ASSERT_TRUE(rc == -1)
+
+
+  rc = async_fd_map_delete(&test_map);
+  ASSERT_TRUE(rc == 0);
+  ASSERT_TRUE(test_map == NULL);
   return TEST_SUCCESS;
 }
