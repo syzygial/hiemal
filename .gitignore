@@ -12,3 +12,4 @@ test/test_main.c
 **/__pycache__
 hiemal.egg-info/**
 dist/**
+**/*.code-workspace

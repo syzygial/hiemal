@@ -214,3 +214,26 @@ int dct_2_64f(buffer_t *src, void *dest, unsigned int n_samples) {
 int upsample_linear_32(buffer_t *src, void *dest, unsigned int M) {
   
 }
+
+
+IMPL(src_sin) {
+  double_t _a = 1.0;
+  double_t _ph = 0.0;
+  buf_array_t *buffers = (buf_array_t*)_outputs;
+  buffer_t *buf = *(buffers->buffers);
+  double_t *dt_freq, *a, *ph;
+  a = &_a;
+  ph = &_ph; 
+  unsigned int *arg;
+  kwargs_unpack(kwargs, "(a;ph;)arg;dt_freq;", &a, &ph, &arg, &dt_freq);
+  int n_samples = n_bytes / sizeof(double_t);
+  int i = 0;
+  double_t *new_samples = (double_t*)malloc(n_bytes);
+  for (i = 0; i < n_samples; i++) {
+    new_samples[i] = (*a) * sin((*dt_freq)*(i + *arg) + (*ph));
+  }
+  buffer_write(buf, new_samples, n_bytes);
+  (*arg) += (*dt_freq)*n_samples;
+  free(new_samples);
+  return n_bytes;
+}

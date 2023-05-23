@@ -12,7 +12,9 @@ target_sources(hiemal PRIVATE
   info.c
   logging.c
   device.c
-  backend.c)
+  backend.c
+  common.c
+  switchboard.c)
 
 if(WITH_ALSA)
   target_sources(hiemal PRIVATE alsa.c)

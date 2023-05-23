@@ -17,4 +17,5 @@ int fir_filter(double_t *src, double_t *dest, double_t *b, \
 int dct_2_64f(buffer_t *src, void *dest, unsigned int n_samples);
 
 IMPL(fir_filter);
+IMPL(src_sin);
 #endif

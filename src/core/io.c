@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <math.h>
 
 IMPL(src_fd) {
   long int fd = (long int)_inputs;

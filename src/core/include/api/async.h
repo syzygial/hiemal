@@ -5,7 +5,7 @@
 
 #define ASYNC_LOOP_MAX_FN 100
 
-typedef enum {INTERN_PIPE, EXTERN, BAD_FD} fd_type_t;
+typedef enum {INTERN_PIPE, EXTERN, ASYNC_MSG, BAD_FD} fd_type_t;
 
 typedef struct _async_handle async_handle_t;
 typedef struct _async_args {

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 
 #include "intern/async.h"
 
@@ -159,8 +160,11 @@ void *_async_loop(void *_h) {
         if (async_fd_map_get_fd_type(h->map, (h->async_fds)[i].fd) == INTERN_PIPE) {
           read((h->async_fds)[i].fd, &n_samples, 4);
         }
-        else {
+        else if (async_fd_map_get_fd_type(h->map, (h->async_fds)[i].fd) == EXTERN) {
           ioctl((h->async_fds)[i].fd, FIONREAD, &n_samples);
+        }
+        else {
+          break;
         }
         i_fn = async_fd_map_get_index(h->map, (h->async_fds)[i].fd);
         (*(h->fn_ptrs)[i_fn])(n_samples, (h->inputs)[i_fn], (h->outputs)[i_fn], &((h->kwargs)[i_fn]));
@@ -181,8 +185,11 @@ void async_loop_dispatch(async_handle_t *h)
 
 void async_loop_stop(async_handle_t *h)
 {
+  char msg = '\0';
   h->thread_created = false;
   h->loop_active = false;
+  // break the loop out of poll()-ing by sending a null byte
+  write(h->msg_fd, &msg, 1);
   pthread_join(h->thread_id, NULL);
 }
 /*! \brief Initialize async event loop
@@ -199,9 +206,15 @@ int async_loop_init(async_handle_t **h)
   (*h)->n_fn = 0;
   (*h)->thread_id = (pthread_t)NULL;
   (*h)->async_fds = (struct pollfd*)malloc(100*sizeof(struct pollfd));
-  (*h)->n_fds = 0;
   (*h)->n_fds_alloc = 100;
+  int msg_fds[2];
+  pipe(msg_fds);
+  (*h)->msg_fd = msg_fds[1];
+  ((*h)->async_fds)[0].fd = msg_fds[0];
+  ((*h)->async_fds)[0].events = POLLIN;
+  (*h)->n_fds = 1;
   async_fd_map_init(&((*h)->map));
+  async_fd_map_insert((*h)->map, msg_fds[0], ASYNC_MSG,-1);
   return 0;
 }
 

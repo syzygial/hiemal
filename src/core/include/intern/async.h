@@ -19,6 +19,7 @@ struct _async_handle {
   unsigned int n_fds_alloc;
   struct pollfd* async_fds;
   async_fd_map_t *map;
+  int msg_fd;
   void *inputs[ASYNC_LOOP_MAX_FN];
   void *outputs[ASYNC_LOOP_MAX_FN];
   kwargs_t kwargs[ASYNC_LOOP_MAX_FN];

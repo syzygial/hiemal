@@ -76,7 +76,7 @@ int hm_alsa_device_init(hm_device_t **dev, int card_index) {
   (*dev)->backend_handle = (void*)alsa_card;
 
   int n_pcm = hm_alsa_n_pcm(card_index);
-  (*dev)->io_devices = (hm_device_io_t**)malloc(card_index*sizeof(hm_device_io_t*));
+  (*dev)->io_devices = (hm_device_io_t**)malloc(n_pcm*sizeof(hm_device_io_t*));
   int i = 0;
   hm_device_io_t **pcm = NULL;
   for (i = 0; i < n_pcm; i++) {

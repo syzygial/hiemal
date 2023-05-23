@@ -111,3 +111,28 @@ TEST(dct_type_II) {
   buffer_delete(&rbuf);
   return TEST_SUCCESS;
 }
+
+TEST(src_sin_impl) {
+  double_t tol = 1e-3;
+  int n_samples = 5;
+  int rc = 0;
+  unsigned long int arg = 0;
+  double_t dt_freq = 0.1;
+  double_t sin_ref[] = {0.0, 0.0998, 0.1987, 0.2955, 0.3894};
+  kwargs_t kwargs;
+  kwargs.argc = 2;
+  char *arg_names[] = {"arg", "dt_freq"};
+  void *args[] = {(void*)(&arg), (void*)(&dt_freq)};
+  kwargs.arg_names = arg_names;
+  kwargs.args = args;
+  buffer_t *buf = NULL;
+  buf_array_t out;
+  out.n_buffer = 1;
+  out.buffers = &buf;
+  buffer_init(&buf, sizeof(double_t)*n_samples, RING);
+  rc = src_sin_impl(n_samples*sizeof(double_t), NULL, &out, &kwargs);
+  ASSERT_TRUE(rc == n_samples * sizeof(double_t));
+  ASSERT_ALMOST_EQUAL_1D(sin_ref, buf->buf, n_samples, tol)
+  buffer_delete(&buf);
+  return TEST_SUCCESS;
+}

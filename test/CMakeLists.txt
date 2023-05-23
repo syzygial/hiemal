@@ -3,7 +3,8 @@ SET(TEST_FILES
   test_dsp.c 
   test_math.c 
   test_io.c 
-  test_async.c)
+  test_async.c
+  test_common.c)
 
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)
@@ -17,7 +18,7 @@ if(WITH_PULSEAUDIO)
   list(APPEND TEST_FILES test_pulse.c)
 endif()
 
-set(GENDRIVER_EXCLUDED_FILES test_main.c test_common.c)
+set(GENDRIVER_EXCLUDED_FILES test_main.c)
 
 # skip protobuf-related tests
 if(NOT WITH_PROTOBUF)
@@ -34,10 +35,10 @@ if(NOT WITH_PULSEAUDIO)
   list(APPEND GENDRIVER_EXCLUDED_FILES test_pulse.c)
 endif()
 
-add_executable(run_tests EXCLUDE_FROM_ALL test_main.c test_common.c ${TEST_FILES})
+add_executable(run_tests EXCLUDE_FROM_ALL test_main.c common.c ${TEST_FILES})
 target_sources(run_tests PRIVATE mock/mock_async.c)
 add_custom_command(OUTPUT test_main.c 
-  DEPENDS test_main.c.in util/gendriver.py ${TEST_FILES}
+  DEPENDS test_main.c.in common.c util/gendriver.py ${TEST_FILES}
   COMMAND python3 util/gendriver.py --exclude_files ${GENDRIVER_EXCLUDED_FILES}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
   COMMENT "Generating test_main.c"
