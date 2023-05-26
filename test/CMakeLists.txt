@@ -35,7 +35,7 @@ if(NOT WITH_PULSEAUDIO)
   list(APPEND GENDRIVER_EXCLUDED_FILES test_pulse.c)
 endif()
 
-add_executable(run_tests EXCLUDE_FROM_ALL test_main.c common.c ${TEST_FILES})
+add_executable(run_tests EXCLUDE_FROM_ALL test_main.c common.c util/util.c ${TEST_FILES})
 target_sources(run_tests PRIVATE mock/mock_async.c)
 add_custom_command(OUTPUT test_main.c 
   DEPENDS test_main.c.in common.c util/gendriver.py ${TEST_FILES}

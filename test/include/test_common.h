@@ -4,9 +4,11 @@
 
 extern const int TEST_SUCCESS;
 extern const int TEST_FAILURE;
+extern const int TEST_SKIPPED;
 extern unsigned int LOG_LEVEL;
 
 #define TEST(name) int test_##name()
+typedef int (test_fn)();
 
 #define ASSERT_TRUE(expr) if (!_assert_true(expr)) { return TEST_FAILURE; }
 #define ASSERT_FALSE(expr) if (!_assert_false(expr)) { return TEST_FAILURE; }

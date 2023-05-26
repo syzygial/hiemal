@@ -4,7 +4,8 @@
 #include "test_common.h"
 
 const int TEST_SUCCESS = 0;
-const int TEST_FAILURE = -1;
+const int TEST_FAILURE = 1;
+const int TEST_SKIPPED = 2;
 unsigned int LOG_LEVEL = 1;
 inline int _assert_true(int expr) {
   return (expr) ? 1 : 0;
