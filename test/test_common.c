@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <math.h>
 
 TEST(next_arg) {
@@ -53,5 +54,46 @@ TEST(kwargs_unpack) {
   ASSERT_TRUE(a_order == 0);
   ASSERT_TRUE(b == _b);
   ASSERT_TRUE(b_order == 3);
+  return TEST_SUCCESS;
+}
+
+TEST(hm_list) {
+
+  struct test_node {
+    HM_LIST_NODE_HEAD(struct test_node)
+    int dat;
+  };
+
+  struct test_list {
+    HM_LIST_HEAD(struct test_node)
+  };
+  
+  struct test_node *a, *b, *c;
+  struct test_list *l;
+
+  a = (struct test_node*)malloc(sizeof(struct test_node));
+  b = (struct test_node*)malloc(sizeof(struct test_node));
+  c = (struct test_node*)malloc(sizeof(struct test_node));
+  l = (struct test_list*)malloc(sizeof(struct test_list));
+
+  HM_LIST_NODE_INIT(a);
+  HM_LIST_NODE_INIT(b);
+  HM_LIST_NODE_INIT(c);
+  HM_LIST_INIT(l);
+
+  a->dat = 3;
+  b->dat = 4;
+  c->dat = 5;
+
+  hm_list_append(l, a);
+  hm_list_append(l, b);
+  hm_list_insert(l, c, 1);
+
+  ASSERT_TRUE(l->head->dat == 3);
+  ASSERT_TRUE(l->head->next->dat == 5);
+  ASSERT_TRUE(l->head->next->next->dat == 4);
+
+  hm_list_delete(l, NULL);
+  
   return TEST_SUCCESS;
 }

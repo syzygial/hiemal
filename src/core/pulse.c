@@ -1,3 +1,4 @@
+#include "intern/common.h"
 #include "intern/buffer.h"
 #include "intern/pulse.h"
 
@@ -8,6 +9,7 @@
 typedef struct {
   pa_threaded_mainloop *mainloop;
   pa_context *hm_context;
+  pa_server_info *server_info;
 } hm_pulse_handle_t;
 
 typedef struct {
@@ -15,8 +17,63 @@ typedef struct {
   int dev_i;
 } indexed_dev_handle;
 
+struct hm_pulse_io_node {
+  HM_LIST_NODE_HEAD(struct hm_pulse_io_node)
+  hm_device_io_t *io_device;
+  int card_id;
+};
+
+struct hm_pulse_io_list {
+  HM_LIST_HEAD(struct hm_pulse_io_node)
+};
+
+int get_dev_io_id(struct hm_pulse_io_list *l, const char *name) {
+  struct hm_pulse_io_node *node_itr = l->head;
+  int i = 0;
+  while (node_itr != NULL) {
+    if (strcmp(node_itr->io_device->name, name) == 0) {
+      return i;
+    }
+    i++;
+    node_itr = node_itr->next;
+  }
+  return -1;
+}
+
+int io_list_to_array(struct hm_pulse_io_list *l, hm_backend_connection_t *pulse_backend) {
+  int n_cards = pulse_backend->n_devices;
+  int *card_io_count = (int*)calloc(n_cards,sizeof(int));
+  struct hm_pulse_io_node *node_itr = l->head;
+  int i = 0;
+  for (i = 0; i < l->n_items; i++) {
+    card_io_count[node_itr->card_id] += 1;
+    node_itr = node_itr->next;
+  }
+
+  for (i = 0; i < n_cards; i++) {
+    (pulse_backend->devices[i])->n_io_devices = 0;
+    (pulse_backend->devices[i])->io_devices = (hm_device_io_t**)malloc(card_io_count[i]*sizeof(hm_device_io_t*));
+  }
+
+  node_itr = l->head;
+  hm_device_t *cur_device = NULL;
+  for (i = 0; i < l->n_items; i++) {
+    cur_device = (pulse_backend->devices)[node_itr->card_id];
+    (cur_device->io_devices)[cur_device->n_io_devices] = node_itr->io_device;
+    cur_device->n_io_devices += 1;
+    node_itr = node_itr->next;
+  }
+  free(card_io_count);
+  return 0;
+}
+
 void _hm_pulse_context_state_cb(pa_context *c, void *userdata) {
   return;
+}
+
+void _hm_pulse_server_info_cb(pa_context *c, const pa_server_info *i, void *userdata) {
+  hm_pulse_handle_t *hm_pulse = (hm_pulse_handle_t*)userdata;
+  hm_pulse->server_info = (pa_server_info*)i;
 }
 
 void _hm_pulse_card_list_cb (pa_context *c, const pa_card_info *i, int eol, void *userdata) {
@@ -28,11 +85,6 @@ void _hm_pulse_card_list_cb (pa_context *c, const pa_card_info *i, int eol, void
   *dev = (hm_device_t*)malloc(sizeof(hm_device_t));
   (*dev)->name = strdup(i->name);
   (*dev)->io_backend = PULSEAUDIO;
-  int n_src = i->active_profile2->n_sources;
-  int n_sink = i->active_profile2->n_sinks;
-  int n_streams = n_src + n_sink;
-  (*dev)->n_io_devices = n_streams;
-  (*dev)->io_devices = (hm_device_io_t**)calloc(n_streams,sizeof(hm_device_io_t*));
   (indexed_dev->dev_i)++;
 }
 
@@ -40,26 +92,28 @@ void _hm_pulse_source_list_cb (pa_context *c, const pa_source_info *i, int eol, 
   if (eol > 0) {
     return;
   }
-  hm_backend_connection_t *pulse_backend = (hm_backend_connection_t*)userdata;
-  hm_device_io_t **io_dev_itr = (pulse_backend->devices[i->card])->io_devices;
-  int ii = 0;
-  int n_io_dev = (pulse_backend->devices[i->card])->n_io_devices;
-  while(*(io_dev_itr++) != NULL);
-  *io_dev_itr = (hm_device_io_t*)malloc(sizeof(hm_device_io_t));
-  (*io_dev_itr)->name = strdup(i->name);
+  struct hm_pulse_io_list *list = (struct hm_pulse_io_list*)userdata;
+  struct hm_pulse_io_node *new_node = (struct hm_pulse_io_node*)malloc(sizeof(struct hm_pulse_io_node));
+  HM_LIST_NODE_INIT(new_node)
+  new_node->io_device = (hm_device_io_t*)malloc(sizeof(hm_device_io_t));
+  new_node->io_device->name = strdup(i->name);
+  new_node->io_device->type = RECORDING;
+  new_node->card_id = i->card;
+  hm_list_append(list, new_node);
 }
 
 void _hm_pulse_sink_list_cb (pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
   if (eol > 0) {
     return;
   }
-  hm_backend_connection_t *pulse_backend = (hm_backend_connection_t*)userdata;
-  hm_device_io_t **io_dev_itr = (pulse_backend->devices[i->card])->io_devices;
-  int ii = 0;
-  int n_io_dev = (pulse_backend->devices[i->card])->n_io_devices;
-  while(*(io_dev_itr++) != NULL);
-  *io_dev_itr = (hm_device_io_t*)malloc(sizeof(hm_device_io_t));
-  (*io_dev_itr)->name = strdup(i->name);
+  struct hm_pulse_io_list *list = (struct hm_pulse_io_list*)userdata;
+  struct hm_pulse_io_node *new_node = (struct hm_pulse_io_node*)malloc(sizeof(struct hm_pulse_io_node));
+  HM_LIST_NODE_INIT(new_node)
+  new_node->io_device = (hm_device_io_t*)malloc(sizeof(hm_device_io_t));
+  new_node->io_device->name = strdup(i->name);
+  new_node->io_device->type = PLAYBACK;
+  new_node->card_id = i->card;
+  hm_list_append(list, new_node);
 }
 
 void _hm_pulse_n_cards_cb (pa_context *c, const pa_card_info *i, int eol, void *userdata) {
@@ -106,6 +160,7 @@ int hm_pulse_connection_init(hm_backend_connection_t **pulse_backend) {
     (hm_pulse_handle_t*)malloc(sizeof(hm_pulse_handle_t));
   pulse_handle->mainloop = m;
   pulse_handle->hm_context = hm_pa_context;
+  (*pulse_backend)->backend_name = "PULSEAUDIO";
   (*pulse_backend)->backend_type = PULSEAUDIO;
   (*pulse_backend)->backend_handle = (void*)pulse_handle;
   int n_cards = hm_pulse_n_cards(*pulse_backend);
@@ -114,27 +169,55 @@ int hm_pulse_connection_init(hm_backend_connection_t **pulse_backend) {
   indexed_dev_handle dev_cb_handle;
   dev_cb_handle.dev = (*pulse_backend)->devices;
   dev_cb_handle.dev_i = 0;
+  struct hm_pulse_io_list *list = (struct hm_pulse_io_list*)malloc(sizeof(struct hm_pulse_io_list));
+  HM_LIST_INIT(list)
+  // run callbacks to get context/server info
   pa_operation *o = 
     pa_context_get_card_info_list(hm_pa_context, _hm_pulse_card_list_cb, (void*)(&dev_cb_handle));
   while(pa_operation_get_state(o) != PA_OPERATION_DONE);
-  o = pa_context_get_source_info_list(hm_pa_context, _hm_pulse_source_list_cb,
-    (void*)(*pulse_backend));
+  o = pa_context_get_source_info_list(hm_pa_context, _hm_pulse_source_list_cb, (void*)list);
   while(pa_operation_get_state(o) != PA_OPERATION_DONE);
-  o = pa_context_get_sink_info_list(hm_pa_context, _hm_pulse_sink_list_cb,
-    (void*)(*pulse_backend));
+  o = pa_context_get_sink_info_list(hm_pa_context, _hm_pulse_sink_list_cb,(void*)list);
   while(pa_operation_get_state(o) != PA_OPERATION_DONE);
+  o = pa_context_get_server_info(hm_pa_context, _hm_pulse_server_info_cb, (void*)pulse_handle);
+  while(pa_operation_get_state(o) != PA_OPERATION_DONE);
+  io_list_to_array(list, *pulse_backend);
+  (*pulse_backend)->dev_io_list = (hm_list_t*)list;
+  int default_sink = get_dev_io_id(list, pulse_handle->server_info->default_sink_name);
+  int default_src = get_dev_io_id(list, pulse_handle->server_info->default_source_name);
+  (*pulse_backend)->default_dev_io[0] = default_sink;
+  (*pulse_backend)->default_dev_io[1] = default_src;
+  return 0;
+}
+
+int hm_pulse_io_connect_by_id(hm_device_io_connection_t **io, hm_backend_connection_t *pulse_backend, unsigned int id) {
+  struct hm_pulse_io_node *io_node_itr = ((struct hm_pulse_io_list*)(pulse_backend->dev_io_list))->head;
+  int i = 0;
+  for (i = 0; i < id; i++) {
+    io_node_itr = io_node_itr->next;
+  }
+  hm_pulse_handle_t *pulse_handle = (hm_pulse_handle_t*)(pulse_backend->backend_handle);
+  pa_context *c = pulse_handle->hm_context;
+  pa_stream *new_stream = pa_stream_new(c, "hiemal", &(pulse_handle->server_info->sample_spec), NULL);
+  switch (io_node_itr->io_device->type) {
+    case PLAYBACK:
+      pa_stream_connect_playback(new_stream, io_node_itr->io_device->name, NULL, 0, NULL, NULL);
+    case RECORDING:
+      pa_stream_connect_record(new_stream, io_node_itr->io_device->name, NULL, 0);
+  }
+  *io = (hm_device_io_connection_t*)malloc(sizeof(hm_device_io_connection_t));
+  (*io)->backend_handle = (void*)new_stream;
+  (*io)->type = io_node_itr->io_device->type;
+  (*io)->read_fn = hm_pulse_io_read;
+  (*io)->write_fn = hm_pulse_io_write;
   return 0;
 }
 
 int hm_pulse_default_io_connect(hm_device_io_connection_t **io, 
-  hm_backend_connection_t *pulse_backend, hm_io_type_t dir) {
+    hm_backend_connection_t *pulse_backend, hm_io_type_t dir) {
   hm_pulse_handle_t *pulse_handle = (hm_pulse_handle_t*)(pulse_backend->backend_handle);
   pa_context *c = pulse_handle->hm_context;
-  pa_sample_spec fmt;
-  fmt.format = PA_SAMPLE_S16LE;
-  fmt.rate = 44100;
-  fmt.channels = 2;
-  pa_stream *new_stream = pa_stream_new(c, "hiemal", &fmt, NULL);
+  pa_stream *new_stream = pa_stream_new(c, "hiemal", &(pulse_handle->server_info->sample_spec), NULL);
   switch (dir) {
     case PLAYBACK:
       pa_stream_connect_playback(new_stream, "default", NULL, 0, NULL, NULL);
@@ -146,6 +229,27 @@ int hm_pulse_default_io_connect(hm_device_io_connection_t **io,
   (*io)->type = dir;
   (*io)->read_fn = hm_pulse_io_read;
   (*io)->write_fn = hm_pulse_io_write;
+  return 0;
+}
+
+int hm_pulse_dump_info(hm_backend_connection_t *pulse_backend) {
+  hm_pulse_handle_t *hm_pulse = (hm_pulse_handle_t*)(pulse_backend->backend_handle);
+  printf("Backend: PulseAudio\n\n");
+  printf("Devices:\n");
+
+  int i, j;
+  hm_device_t *cur_dev = NULL;
+  for (i = 0; i < pulse_backend->n_devices; i++) {
+    cur_dev = (pulse_backend->devices)[i];
+    printf("  %s\n", (cur_dev->name));
+    printf("    IO devices:\n");
+    for (j = 0; j < cur_dev->n_io_devices; j++) {
+      printf("      %s\n", (cur_dev->io_devices)[j]->name);
+    }
+  }
+  printf("Server Info:\n");
+  printf("  Default Source: %s\n", hm_pulse->server_info->default_source_name);
+  printf("  Default Sink: %s\n", hm_pulse->server_info->default_sink_name);
   return 0;
 }
 
@@ -170,6 +274,7 @@ int hm_pulse_connection_close(hm_backend_connection_t **pulse_backend) {
     free(cur_device);
   }
   free((*pulse_backend)->devices);
+  hm_list_delete((*pulse_backend)->dev_io_list, NULL);
   free(*pulse_backend);
   *pulse_backend = NULL;
   return 0;
