@@ -16,6 +16,10 @@ target_sources(hiemal PRIVATE
   common.c
   switchboard.c)
 
+if(UNIX)
+  target_sources(hiemal PRIVATE switchboard_unix.c)
+endif()
+
 if(WITH_ALSA)
   target_sources(hiemal PRIVATE alsa.c)
 endif()
