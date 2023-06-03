@@ -1,5 +1,5 @@
-#ifndef _BACKEND_H
-#define _BACKEND_H
+#ifndef _INTERN_BACKEND_H
+#define _INTERN_BACKEND_H
 
 #include "intern/common.h"
 

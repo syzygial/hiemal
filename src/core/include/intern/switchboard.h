@@ -1,6 +1,7 @@
-#ifndef _SWITCHBOARD_H
-#define _SWITCHBOARD_H
+#ifndef _INTERN_SWITCHBOARD_H
+#define _INTERN_SWITCHBOARD_H
 
+#include "api/switchboard.h"
 #include "intern/common.h"
 #include "intern/async.h"
 #include "intern/buffer.h"
@@ -8,6 +9,12 @@
 #ifdef __unix__
 #include <pthread.h>
 #endif
+
+// switchboard_send/switchboard_recv flags
+
+#define SB_NONBLOCKING 0x1
+#define SB_POLL 0x2
+
 
 typedef enum {
   ASYNC_LOOP=0,
@@ -41,16 +48,6 @@ typedef pthread_t context_thread_id;
 typedef pthread_mutex_t node_mutex;
 #endif
 
-typedef enum {FORWARD, BACKWARD, BIDIRECTIONAL} switchboard_connection_dir;
-
-typedef struct _switchboard switchboard_t;
-typedef struct _switchboard_node switchboard_node_t;
-typedef struct _switchboard_node_list switchboard_node_list_t;
-typedef struct _switchboard_connection switchboard_connection_t;
-typedef struct _switchboard_connection_list switchboard_connection_list_t;
-typedef struct _switchboard_context switchboard_context_t;
-typedef struct _switchboard_context_list switchboard_context_list_t;
-
 struct _switchboard_node {
   HM_LIST_NODE_HEAD(switchboard_node_t)
   char *name;
@@ -69,6 +66,7 @@ struct _switchboard_node_list {
 
 struct _switchboard_connection {
   HM_LIST_NODE_HEAD(switchboard_connection_t)
+  unsigned int connection_id;
   connection_type_t connection_type;
   switchboard_node_t *nodes[2];
   switchboard_connection_dir dir;
@@ -81,6 +79,7 @@ struct _switchboard_connection_list {
 
 struct _switchboard_context {
   HM_LIST_NODE_HEAD(switchboard_context_t)
+  unsigned int context_id;
   switchboard_node_t *node;
   switchboard_connection_list_t *incoming_connections;
   switchboard_connection_list_t *outgoing_connections;
@@ -97,6 +96,15 @@ struct _switchboard {
   switchboard_context_list_t *context_list;
 };
 
-int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switchboard_node_t *dest, char *name, switchboard_connection_dir dir);
 switchboard_node_t* switchboard_get_node_by_id(switchboard_t *s, unsigned int node_id);
+
+// OS-specific functionality
+int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switchboard_node_t *dest, char *name, switchboard_connection_dir dir);
+
+int activate_context(switchboard_context_t *ctx, int flags);
+int deactivate_context(switchboard_context_t *ctx);
+
+int connection_poll(switchboard_node_t *recv_node, switchboard_connection_t *connection);
+int connection_poll_stop(switchboard_node_t *recv_node, switchboard_connection_t *connection);
+
 #endif

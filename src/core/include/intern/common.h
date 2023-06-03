@@ -1,5 +1,5 @@
-#ifndef _COMMON_H
-#define _COMMON_H
+#ifndef _INTERN_COMMON_H
+#define _INTERN_COMMON_H
 
 #include <assert.h>
 #include <stdint.h>
@@ -24,6 +24,10 @@ enum {
 #else
 #define STATIC static
 #endif
+
+
+#define HM_FLAG_SET(flags, flag) ((flags & flag) == flag)
+
 
 typedef void hm_type_t;
 typedef void hm_list_t;

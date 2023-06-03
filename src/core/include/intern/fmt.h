@@ -1,5 +1,5 @@
-#ifndef _FMT_H
-#define _FMT_H
+#ifndef _INTERN_FMT_H
+#define _INTERN_FMT_H
 
 #include <stdint.h>
 

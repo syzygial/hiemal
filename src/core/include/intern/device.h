@@ -1,5 +1,5 @@
-#ifndef _DEVICE_H
-#define _DEVICE_H
+#ifndef _INTERN_DEVICE_H
+#define _INTERN_DEVICE_H
 
 #include "intern/backend.h"
 #include "intern/buffer.h"

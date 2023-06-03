@@ -1,5 +1,5 @@
-#ifndef _ERROR_H
-#define _ERROR_H
+#ifndef _INTERN_ERROR_H
+#define _INTERN_ERROR_H
 
 #define ERRTXT_LEN 100
 

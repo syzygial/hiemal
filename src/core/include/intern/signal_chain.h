@@ -1,5 +1,5 @@
-#ifndef _SIGNAL_CHAIN_H
-#define _SIGNAL_CHAIN_H
+#ifndef _INTERN_SIGNAL_CHAIN_H
+#define _INTERN_SIGNAL_CHAIN_H
 
 #include "intern/buffer.h"
 #include "intern/common.h"

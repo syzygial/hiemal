@@ -1,5 +1,5 @@
-#ifndef _TEST_ASYNC_H
-#define _TEST_ASYNC_H
+#ifndef _INTERN_ASYNC_H
+#define _INTERN_ASYNC_H
 
 #include "api/async.h"
 #include "common.h"

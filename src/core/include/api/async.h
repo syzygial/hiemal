@@ -1,5 +1,5 @@
-#ifndef _INTERN_ASYNC_H
-#define _INTERN_ASYNC_H
+#ifndef _ASYNC_H
+#define _ASYNC_H
 
 #include "intern/common.h"
 

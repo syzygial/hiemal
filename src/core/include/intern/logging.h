@@ -1,3 +1,6 @@
+#ifndef _INTERN_LOGGING_H
+#define _INTERN_LOGGING_H
+
 #define LOG_LVL_ERR 1
 #define LOG_LVL_WARN 2
 #define LOG_LVL_INFO 3
@@ -14,3 +17,5 @@ int hm_log_warn(char *msg);
 int hm_log_info(char *msg);
 int hm_log_debug(char *msg);
 int hm_log_verbose(char *msg);
+
+#endif

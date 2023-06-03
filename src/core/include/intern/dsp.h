@@ -1,5 +1,5 @@
-#ifndef _DSP_H
-#define _DSP_H
+#ifndef _INTERN_DSP_H
+#define _INTERN_DSP_H
 
 #include <math.h>
 

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -66,6 +67,18 @@ switchboard_node_t* switchboard_get_node_by_id(switchboard_t *s, unsigned int no
   return NULL;
 }
 
+switchboard_connection_t* switchboard_get_connection(switchboard_node_t *node1, switchboard_node_t *node2) {
+  switchboard_connection_t *node1_conn_itr = node1->connections->head;
+  switchboard_node_t *node1_conn_endpoint = NULL;
+  while (node1_conn_itr != NULL) {
+    node1_conn_endpoint = (node1_conn_itr->nodes[0] == node1) ? node1_conn_itr->nodes[1] : node1_conn_itr->nodes[0];
+    if (node1_conn_endpoint == node2) {
+      return node1_conn_itr;
+    }
+    node1_conn_itr = node1_conn_itr->next;
+  }
+  return NULL;
+}
 
 switchboard_node_t* common_async_loop(switchboard_node_t *node1, switchboard_node_t *node2) {
   switchboard_connection_t *node1_itr = node1->connections->head;
@@ -103,17 +116,64 @@ int switchboard_send_buf_buf(switchboard_t *s, buffer_t *src, buffer_t *dest, un
   return n_bytes_transferred;
 }
 
-int switchboard_send(switchboard_t *s, switchboard_context_t *src, unsigned int node_id) {
+int switchboard_send(switchboard_t *s, switchboard_context_t *src_ctx, unsigned int node_id, unsigned int n_bytes, const int flags) {
+  switchboard_node_t *src_node = src_ctx->node;
   switchboard_node_t *dest_node = switchboard_get_node_by_id(s, node_id);
   switchboard_context_t *dest_ctx = dest_node->active_context;
+  switchboard_connection_t *sb_connection = switchboard_get_connection(src_node, dest_node);
+  if (ctx_same_thread(src_ctx, dest_ctx)) goto send;
+  if (sb_connection->dir != FORWARD && HM_FLAG_SET(flags, SB_POLL)) {
+    connection_poll(src_node, sb_connection);
+    goto send;
+  }
+  else if (sb_connection->dir == BIDIRECTIONAL) {
+    goto send;
+  }
+  else if (sb_connection->dir == BACKWARD) {
+    return -1;
+  }
+  else {
+    goto send;
+  }
+  send:
+  activate_context(src_ctx, flags);
+  activate_context(dest_ctx, flags);
+  switchboard_send_buf_buf(s, src_node->res.buf, dest_node->res.buf, n_bytes);
+  deactivate_context(src_ctx);
+  deactivate_context(dest_ctx);
+  connection_poll_stop(dest_node, sb_connection);
   return 0;
 }
-/*
+
 int switchboard_recv(switchboard_t *s, unsigned int node_id) {
   return 0;
 }
-*/
+
+int node_dump_info(hm_list_node_t *node) {
+  switchboard_node_t *_node = (switchboard_node_t*)node;
+  printf("    Node %s: <%p>\n", _node->name, _node);
+  return 0;
+}
+
+int connection_dump_info(hm_list_node_t *connection) {
+  switchboard_connection_t *_connection = (switchboard_connection_t*)connection;
+  printf("    Connection %u: <%p\n", _connection->connection_id, _connection);
+  return 0;
+}
+
+int context_dump_info(hm_list_node_t *context) {
+  switchboard_context_t *_context = (switchboard_context_t*)context;
+  printf("  Context %u: <%p>\n", _context->context_id, _context);
+  return 0;
+}
 
 int switchboard_dump(switchboard_t *s) {
+  printf("Switchboard info: <%p>\n", s);
+  printf("  Node list: <%p>\n", s->nodes);
+  hm_list_itr(s->nodes, node_dump_info);
+  printf("  Connection list: <%p>\n", s->connections);
+  hm_list_itr(s->connections, connection_dump_info);
+  printf("  Context list: <%p>\n", s->context_list);
+  hm_list_itr(s->context_list, context_dump_info);
   return 0;
 }

@@ -1,5 +1,5 @@
-#ifndef _HM_ALSA_H
-#define _HM_ALSA_H
+#ifndef _INTERN_ALSA_H
+#define _INTERN_ALSA_H
 
 #include <alsa/asoundlib.h>
 #include "intern/device.h"

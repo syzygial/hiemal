@@ -1,5 +1,5 @@
-#ifndef _IO_H
-#define _IO_H
+#ifndef _INTERN_IO_H
+#define _INTERN_IO_H
 
 #include "intern/buffer.h"
 #include "intern/async.h"

@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <poll.h>
+#include <sys/ioctl.h>
 
 #include "intern/switchboard.h"
 
@@ -10,8 +12,8 @@ int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switch
   switch(dir) {
     case BIDIRECTIONAL:
       int bd_pipe_fd[2][2];
-      pipe(bd_pipe_fd[0]);
-      pipe(bd_pipe_fd[1]);
+      pipe(bd_pipe_fd[0]); // forward connection
+      pipe(bd_pipe_fd[1]); // backward connection
       memcpy(res.bd_pipe_fd, bd_pipe_fd, sizeof(int[2][2]));
       conn_type = UNIX_PIPE_BD;
     case FORWARD:
@@ -50,18 +52,84 @@ int switchboard_add_context(switchboard_t *s, unsigned int node_id) {
   return 0;
 }
 
-int activate_context(switchboard_t *s, switchboard_context_t *ctx) {
+int activate_context(switchboard_context_t *ctx, int flags) {
   switchboard_node_t *node = ctx->node;
+  int rc = 0;
   if (node->active_context == ctx) {
     return 0;
   }
-  else {
-    pthread_mutex_lock(&(node->mutex));
-  }
+  if (HM_FLAG_SET(flags, SB_NONBLOCKING)) rc = pthread_mutex_lock(&(node->mutex));
+  else rc = pthread_mutex_trylock(&(node->mutex));
   node->active_context = ctx;
-  return 0;
+  return rc;
 }
 
 int deactivate_context(switchboard_context_t *ctx) {
+  int rc = 0;
+  switchboard_node_t *node = ctx->node;
+  if (node->active_context != ctx) {
+    return 0;
+  }
+  rc = pthread_mutex_unlock(&(node->mutex));
+  node->active_context = NULL;
+  return rc;
+}
+
+int connection_poll(switchboard_node_t *recv_node, switchboard_connection_t *connection) {
+  int fd = -1;
+
+  if (connection->dir == FORWARD && recv_node == connection->nodes[1]) {
+    fd = connection->res.pipe_fd[1];
+  }
+  else if (connection->dir == BACKWARD && recv_node == connection->nodes[0]) {
+    fd = connection->res.pipe_fd[0];
+  }
+  else if (connection->dir == BIDIRECTIONAL && recv_node == connection->nodes[0]) {
+    fd = connection->res.bd_pipe_fd[1][0];
+  }
+  else if (connection->dir == BIDIRECTIONAL && recv_node == connection->nodes[1]) {
+    fd = connection->res.bd_pipe_fd[0][1];
+  }
+  else {
+    return -1;
+  }
+
+  // clear out pipe
+  int bytes_in_pipe = 0;
+  // TODO: make sure this works on other unix platforms
+  ioctl(fd, FIONREAD, &bytes_in_pipe);
+  if (bytes_in_pipe > 0) {
+    void *buf = malloc(bytes_in_pipe);
+    read(fd, buf, bytes_in_pipe);
+    free(buf);
+  }
+  
+  struct pollfd poll_fd;
+  poll_fd.fd = fd;
+  poll_fd.events = POLLIN;
+  poll(&poll_fd, 1, -1);
+  return 0;
+}
+
+int connection_poll_stop(switchboard_node_t *recv_node, switchboard_connection_t *connection) {
+  char msg = '\0';
+  int fd = -1;
+
+  if (connection->dir == FORWARD && recv_node == connection->nodes[1]) {
+    fd = connection->res.pipe_fd[0];
+  }
+  else if (connection->dir == BACKWARD && recv_node == connection->nodes[0]) {
+    fd = connection->res.pipe_fd[1];
+  }
+  else if (connection->dir == BIDIRECTIONAL && recv_node == connection->nodes[0]) {
+    fd = connection->res.bd_pipe_fd[1][1];
+  }
+  else if (connection->dir == BIDIRECTIONAL && recv_node == connection->nodes[1]) {
+    fd = connection->res.bd_pipe_fd[0][0];
+  }
+  else {
+    return -1;
+  }
+  write(fd, &msg, sizeof(msg));
   return 0;
 }
