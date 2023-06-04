@@ -13,3 +13,4 @@ test/test_main.c
 hiemal.egg-info/**
 dist/**
 **/*.code-workspace
+**/_local
