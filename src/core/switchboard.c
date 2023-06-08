@@ -26,9 +26,27 @@ int switchboard_init(switchboard_t **s) {
   return 0;
 }
 
+int switchboard_node_delete(hm_list_node_t *node) {
+  switchboard_node_t *_node = (switchboard_node_t*)node;
+  //free(_node->connections);
+  hm_list_delete(_node->connections, NULL);
+  //free(_node->context_list);
+  hm_list_delete(_node->context_list, NULL);
+  free(_node->name);
+  free(_node);
+  return 0;
+}
+
+int switchboard_connection_delete(hm_list_node_t *connection) {
+  switchboard_connection_t *_connection = (switchboard_connection_t*)connection;
+  free(_connection->name);
+  free(_connection);
+  return 0;
+}
+
 int switchboard_delete(switchboard_t **s) {
-  hm_list_delete((*s)->nodes, NULL);
-  hm_list_delete((*s)->connections, NULL);
+  hm_list_delete((*s)->nodes, switchboard_node_delete);
+  hm_list_delete((*s)->connections, switchboard_connection_delete);
   hm_list_delete((*s)->context_list, NULL);
   free(*s);
   *s = NULL;
@@ -37,9 +55,15 @@ int switchboard_delete(switchboard_t **s) {
 
 int switchboard_add_node(switchboard_t *s, node_type_t node_type, char *node_name, node_resource node_res) {
   switchboard_node_t *new_node = malloc(sizeof(switchboard_node_t));
+  HM_LIST_NODE_INIT(new_node)
   new_node->type = node_type;
   new_node->res = node_res;
   new_node->name = strdup(node_name);
+  new_node->node_id = s->nodes->n_items;
+  new_node->connections = (switchboard_connection_list_t*)malloc(sizeof(switchboard_connection_list_t));
+  new_node->context_list = (switchboard_context_list_t*)malloc(sizeof(switchboard_context_list_t));
+  HM_REFLIST_INIT(new_node->connections);
+  HM_REFLIST_INIT(new_node->context_list);
   hm_list_append(s->nodes, new_node);
   return 0;
 }
@@ -60,6 +84,17 @@ switchboard_node_t* switchboard_get_node_by_id(switchboard_t *s, unsigned int no
   switchboard_node_t *node_itr = s->nodes->head;
   while (node_itr != NULL) {
     if (node_itr->node_id == node_id) {
+      return node_itr;
+    }
+    node_itr = node_itr->next;
+  }
+  return NULL;
+}
+
+switchboard_node_t* switchboard_get_node_by_name(switchboard_t *s, const char *node_name) {
+  switchboard_node_t *node_itr = s->nodes->head;
+  while (node_itr != NULL) {
+    if (strcmp(node_itr->name,node_name) == 0) {
       return node_itr;
     }
     node_itr = node_itr->next;
@@ -151,19 +186,19 @@ int switchboard_recv(switchboard_t *s, unsigned int node_id) {
 
 int node_dump_info(hm_list_node_t *node) {
   switchboard_node_t *_node = (switchboard_node_t*)node;
-  printf("    Node %s: <%p>\n", _node->name, _node);
+  printf("    Node %s <%p>\n", _node->name, _node);
   return 0;
 }
 
 int connection_dump_info(hm_list_node_t *connection) {
   switchboard_connection_t *_connection = (switchboard_connection_t*)connection;
-  printf("    Connection %u: <%p\n", _connection->connection_id, _connection);
+  printf("    Connection %s <%p\n", _connection->name, _connection);
   return 0;
 }
 
 int context_dump_info(hm_list_node_t *context) {
   switchboard_context_t *_context = (switchboard_context_t*)context;
-  printf("  Context %u: <%p>\n", _context->context_id, _context);
+  printf("    Context %u <%p>\n", _context->context_id, _context);
   return 0;
 }
 
@@ -176,4 +211,10 @@ int switchboard_dump(switchboard_t *s) {
   printf("  Context list: <%p>\n", s->context_list);
   hm_list_itr(s->context_list, context_dump_info);
   return 0;
+}
+
+int switchboard_add_connection_by_name(switchboard_t *s, const char *src, const char *dest, char *name, switchboard_connection_dir dir) {
+  switchboard_node_t *src_node = switchboard_get_node_by_name(s, src);
+  switchboard_node_t *dest_node = switchboard_get_node_by_name(s, dest);
+  return switchboard_add_connection(s, src_node, dest_node, name, dir);
 }

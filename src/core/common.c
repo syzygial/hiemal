@@ -5,12 +5,20 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#define HM_TYPE_ID(magic) (magic & 0xFFFFFFFF)
+#define HM_SUBTYPE_ID(magic) ((magic & ((uint64_t)(0xFFFFFFFF) << 32)) >> 32)
+
 struct hm_type {
   HM_TYPE_HEAD
 };
 
 struct hm_list_node {
   HM_LIST_NODE_HEAD(hm_list_node_t)
+};
+
+struct hm_list_refnode {
+  HM_LIST_NODE_HEAD(struct hm_list_refnode)
+  hm_list_node_t *node;
 };
 
 struct hm_list {
@@ -40,10 +48,19 @@ int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index) {
     node_prev = node_itr;
     node_itr = (struct hm_list_node**)&((*node_itr)->next);
   }
-
-  _node->next = *node_itr;
-  _node->prev = *node_prev;
-  *node_itr = _node;
+  if (HM_SUBTYPE_ID(_list->magic) == 0) {
+    _node->next = *node_itr;
+    _node->prev = *node_prev;
+    *node_itr = _node;
+  }
+  else if (HM_SUBTYPE_ID(_list->magic) == HM_LIST_REFNODE_MAGIC) {
+    struct hm_list_refnode *new_refnode = (struct hm_list_refnode*)malloc(sizeof(struct hm_list_refnode));
+    HM_REFLIST_NODE_INIT(new_refnode);
+    new_refnode->node = node;
+    new_refnode->next = (struct hm_list_refnode*)(*node_itr);
+    new_refnode->prev = (struct hm_list_refnode*)(*node_prev);
+    *node_itr = (struct hm_list_node*)new_refnode;
+  }
   _list->n_items++;
   return 0;
 }

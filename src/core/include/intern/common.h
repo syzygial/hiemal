@@ -9,9 +9,15 @@
 
 #include "error.h"
 
+// base types
 enum {
   HM_LIST_MAGIC=0x1,
-  HM_LIST_NODE_MAGIC
+  HM_LIST_NODE_MAGIC,
+};
+
+// subtypes
+enum {
+  HM_LIST_REFNODE_MAGIC=0x1,
 };
 
 #define HM_LIST_ASSERT(name) assert(name->magic == HM_LIST_MAGIC);
@@ -38,7 +44,9 @@ typedef void hm_list_node_t;
 #define HM_LIST_NODE_HEAD(type) uint64_t magic; type *prev; type *next;
 
 #define HM_LIST_INIT(name) name->head = NULL; name->n_items = 0; name->magic = HM_LIST_MAGIC;
+#define HM_REFLIST_INIT(name) name->head = NULL; name->n_items = 0; name->magic = ((uint64_t)HM_LIST_REFNODE_MAGIC << 32) | (HM_LIST_MAGIC); 
 #define HM_LIST_NODE_INIT(name) name->prev = NULL; name->next = NULL; name->magic = HM_LIST_NODE_MAGIC;
+#define HM_REFLIST_NODE_INIT(name) name->prev = NULL; name->next = NULL; name->node = NULL; name->magic = ((uint64_t)HM_LIST_REFNODE_MAGIC << 32) | (HM_LIST_NODE_MAGIC);
 
 typedef int (list_node_fn)(hm_list_node_t *node); 
 
@@ -74,6 +82,8 @@ typedef struct _array {
 
 bool is_list(hm_type_t *obj);
 bool is_list_node(hm_type_t *obj);
+bool is_list_refnode(hm_type_t *obj);
+
 int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index);
 int hm_list_append(hm_list_t *list, hm_list_node_t *node);
 int hm_list_itr(hm_list_t *list, list_node_fn *itr_fn);

@@ -10,28 +10,6 @@
 #include <pthread.h>
 #endif
 
-// switchboard_send/switchboard_recv flags
-
-#define SB_NONBLOCKING 0x1
-#define SB_POLL 0x2
-
-
-typedef enum {
-  ASYNC_LOOP=0,
-  BUFFER,
-  SOURCE,
-  SINK,
-  RPC
-} node_type_t;
-
-typedef enum {
-  UNIX_PIPE=0,
-  UNIX_PIPE_BD,
-  UNIX_SOCKET,
-  TCP_SOCKET,
-  DBUS
-} connection_type_t;
-
 typedef union {
   buffer_t *buf;
   async_handle_t *async_handle;
@@ -66,6 +44,7 @@ struct _switchboard_node_list {
 
 struct _switchboard_connection {
   HM_LIST_NODE_HEAD(switchboard_connection_t)
+  char *name;
   unsigned int connection_id;
   connection_type_t connection_type;
   switchboard_node_t *nodes[2];
@@ -96,15 +75,8 @@ struct _switchboard {
   switchboard_context_list_t *context_list;
 };
 
+int switchboard_add_node(switchboard_t *s, node_type_t node_type, char *node_name, node_resource node_res);
+
 switchboard_node_t* switchboard_get_node_by_id(switchboard_t *s, unsigned int node_id);
-
-// OS-specific functionality
-int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switchboard_node_t *dest, char *name, switchboard_connection_dir dir);
-
-int activate_context(switchboard_context_t *ctx, int flags);
-int deactivate_context(switchboard_context_t *ctx);
-
-int connection_poll(switchboard_node_t *recv_node, switchboard_connection_t *connection);
-int connection_poll_stop(switchboard_node_t *recv_node, switchboard_connection_t *connection);
-
+switchboard_node_t* switchboard_get_node_by_name(switchboard_t *s, const char *node_name);
 #endif

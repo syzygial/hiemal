@@ -34,7 +34,8 @@ endif()
 
 set(HIEMAL_PUBLIC_INCLUDE
   "include/api/buffer.h"
-  "include/api/recording.h")
+  "include/api/recording.h"
+  "include/api/switchboard.h")
 
 set_target_properties(hiemal PROPERTIES PUBLIC_HEADER "${HIEMAL_PUBLIC_INCLUDE}")
 install(TARGETS hiemal
