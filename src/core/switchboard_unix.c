@@ -37,10 +37,9 @@ int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switch
   return 0;
 }
 
-int switchboard_add_context(switchboard_t *s, unsigned int node_id) {
+switchboard_context_t* switchboard_add_context(switchboard_t *s, switchboard_node_t *node) {
   switchboard_context_t *new_context = (switchboard_context_t*)malloc(sizeof(switchboard_context_t));
   HM_LIST_NODE_INIT(new_context)
-  switchboard_node_t *node = switchboard_get_node_by_id(s, node_id);
   new_context->node = node;
   // TODO: setup context connections
   new_context->incoming_connections = NULL;
@@ -49,12 +48,12 @@ int switchboard_add_context(switchboard_t *s, unsigned int node_id) {
   new_context->context_id = s->context_list->n_items;
   hm_list_append(node->context_list, new_context);
   hm_list_append(s->context_list, new_context);
-  return 0;
+  return new_context;
 }
 
-int switchboard_add_context_by_name(switchboard_t *s, const char *node_name) {
+switchboard_context_t* switchboard_add_context_by_name(switchboard_t *s, const char *node_name) {
   switchboard_node_t *node = switchboard_get_node_by_name(s, node_name);
-  return switchboard_add_context(s, node->node_id);
+  return switchboard_add_context(s, node);
 }
 
 int activate_context(switchboard_context_t *ctx, int flags) {
@@ -78,6 +77,15 @@ int deactivate_context(switchboard_context_t *ctx) {
   rc = pthread_mutex_unlock(&(node->mutex));
   node->active_context = NULL;
   return rc;
+}
+
+context_thread_id get_thread_id() {
+  return pthread_self();
+}
+
+switchboard_context_t* get_context(switchboard_t *s, switchboard_node_t *node) {
+  context_thread_id calling_thread = pthread_self();
+  return (switchboard_context_t*)hm_list_find(node->context_list, _context_thread_cmp, (void*)calling_thread);
 }
 
 int connection_poll(switchboard_node_t *recv_node, switchboard_connection_t *connection) {

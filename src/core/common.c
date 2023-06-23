@@ -65,6 +65,28 @@ int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index) {
   return 0;
 }
 
+hm_list_node_t* hm_list_at(hm_list_t *list, unsigned int index) {
+  struct hm_list *_list = (struct hm_list*)list;
+  struct hm_list_node *node_itr = (struct hm_list_node*)(_list->head);
+  if (index == -1) {
+    index = _list->n_items;
+  }
+  if (_list->n_items < index) return NULL;
+  int i = 0;
+  for (i = 0; i < index; i++) {
+    node_itr = node_itr->next;
+    if (HM_SUBTYPE_ID(_list->magic) == HM_LIST_REFNODE_MAGIC) return node_itr;
+    else return ((struct hm_list_refnode*)node_itr)->node;
+  }
+  return NULL;
+}
+
+hm_list_node_t* hm_list_node_extract(hm_list_node_t *node) {
+  struct hm_list_node *_node = (struct hm_list_node*)node;
+  if (HM_SUBTYPE_ID(_node->magic) == HM_LIST_REFNODE_MAGIC) return ((struct hm_list_refnode*)node)->node;
+  else return node;
+}
+
 int hm_list_append(hm_list_t *list, hm_list_node_t *node) {
   return hm_list_insert(list, node, -1);
 }
@@ -79,8 +101,58 @@ int hm_list_itr(hm_list_t *list, list_node_fn *itr_fn) {
   return 0;
 }
 
-int hm_list_remove(hm_list_t *list, unsigned int index) {
+hm_list_node_t *hm_list_find(hm_list_t *list, list_node_cmp_fn *find_fn, void *userdata) {
   struct hm_list *_list = (struct hm_list*)list;
+  struct hm_list_node *node_itr = _list->head;
+  while (node_itr != NULL) {
+    if ((*find_fn)(node_itr, userdata) == 0) {
+      return node_itr;
+    }
+    node_itr = node_itr->next;
+  }
+  return NULL;
+}
+
+int hm_list_remove(hm_list_t *list, unsigned int index, list_node_fn *free_fn) {
+  struct hm_list *_list = (struct hm_list*)list;
+  if (index == -1) index = _list->n_items - 1;
+  if (_list->n_items < index) return -1;
+  struct hm_list_node **node_itr = (struct hm_list_node**)&(_list->head);
+  struct hm_list_node **node_prev = node_itr;
+
+  int i = 0;
+  for (i = 0; i < index; i++) {
+    node_prev = node_itr;
+    node_itr = (struct hm_list_node**)&((*node_itr)->next);
+  }
+  struct hm_list_node *old_node = *node_itr;
+  *node_itr = (struct hm_list_node*)(old_node->next);
+  if (*node_itr != NULL)(*node_itr)->prev = *node_prev;
+  (free_fn) ? (*free_fn)(old_node) : free(old_node);
+  _list->n_items--;
+  return 0;
+}
+
+int hm_list_remove_where(hm_list_t *list, list_node_cmp_fn *cmp_fn, list_node_fn *free_fn, void *userdata) {
+  struct hm_list *_list = (struct hm_list*)list;
+  struct hm_list_node **node_itr = (struct hm_list_node**)&(_list->head);
+  struct hm_list_node **node_itr_next = NULL;
+  struct hm_list_node **node_prev = node_itr;
+  struct hm_list_node *old_node = NULL;
+  int i = 0;
+  while (*node_itr != NULL) {
+    node_prev = node_itr;
+    old_node = *node_itr;
+    node_itr = (struct hm_list_node**)&(old_node->next);
+    if((*cmp_fn)(old_node, userdata) == 0) {
+      *node_prev = (struct hm_list_node*)(old_node->next);
+      if (*node_prev != NULL) (*node_prev)->prev = *node_prev;
+      (free_fn) ? (*free_fn)(old_node) : free(old_node);
+      _list->n_items--;
+    }
+    i++;
+  }
+  return 0;
 }
 
 int hm_list_delete(hm_list_t *list, list_node_fn *free_fn) {
@@ -95,7 +167,6 @@ int hm_list_delete(hm_list_t *list, list_node_fn *free_fn) {
   free(list);
   return 0;
 }
-
 
 int isvarchar(int c) {
   return (isalnum(c) || c == '_') ? 1 : 0;

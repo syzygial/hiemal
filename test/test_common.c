@@ -57,9 +57,20 @@ TEST(kwargs_unpack) {
   return TEST_SUCCESS;
 }
 
+int _node_even(hm_list_node_t *node, void *userdata) {
+  struct test_node
+  {
+    HM_LIST_NODE_HEAD(struct test_node)
+    int dat;
+  };
+  struct test_node *_node = (struct test_node*)node;
+  return (_node->dat % 2 == 0) ? 0 : 1;
+}
+
 TEST(hm_list) {
 
-  struct test_node {
+  struct test_node
+  {
     HM_LIST_NODE_HEAD(struct test_node)
     int dat;
   };
@@ -68,30 +79,42 @@ TEST(hm_list) {
     HM_LIST_HEAD(struct test_node)
   };
   
-  struct test_node *a, *b, *c;
+  struct test_node *a, *b, *c, *d, *e;
   struct test_list *l;
 
   a = (struct test_node*)malloc(sizeof(struct test_node));
   b = (struct test_node*)malloc(sizeof(struct test_node));
   c = (struct test_node*)malloc(sizeof(struct test_node));
+  d = (struct test_node*)malloc(sizeof(struct test_node));
+  e = (struct test_node*)malloc(sizeof(struct test_node));
   l = (struct test_list*)malloc(sizeof(struct test_list));
 
   HM_LIST_NODE_INIT(a);
   HM_LIST_NODE_INIT(b);
   HM_LIST_NODE_INIT(c);
+  HM_LIST_NODE_INIT(d);
+  HM_LIST_NODE_INIT(e);
   HM_LIST_INIT(l);
 
   a->dat = 3;
   b->dat = 4;
   c->dat = 5;
+  d->dat = 6;
+  e->dat = 7;
 
   hm_list_append(l, a);
   hm_list_append(l, b);
   hm_list_insert(l, c, 1);
+  hm_list_insert(l, d, 0);
+  hm_list_insert(l, e, 0);
+  hm_list_remove(l, 0, NULL);
+  hm_list_remove(l, -1, NULL);
+  hm_list_remove_where(l, _node_even, NULL, NULL);
+  
 
+  ASSERT_TRUE(l->n_items == 2);
   ASSERT_TRUE(l->head->dat == 3);
   ASSERT_TRUE(l->head->next->dat == 5);
-  ASSERT_TRUE(l->head->next->next->dat == 4);
 
   hm_list_delete(l, NULL);
   

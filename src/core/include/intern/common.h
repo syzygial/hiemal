@@ -49,7 +49,7 @@ typedef void hm_list_node_t;
 #define HM_REFLIST_NODE_INIT(name) name->prev = NULL; name->next = NULL; name->node = NULL; name->magic = ((uint64_t)HM_LIST_REFNODE_MAGIC << 32) | (HM_LIST_NODE_MAGIC);
 
 typedef int (list_node_fn)(hm_list_node_t *node); 
-
+typedef int (list_node_cmp_fn)(hm_list_node_t *node, void *userdata); 
 typedef struct _kwargs {
   int argc;
   char **arg_names;
@@ -85,9 +85,13 @@ bool is_list_node(hm_type_t *obj);
 bool is_list_refnode(hm_type_t *obj);
 
 int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index);
+hm_list_node_t* hm_list_at(hm_list_t *list, unsigned int index);
+hm_list_node_t* hm_list_node_extract(hm_list_node_t *node);
 int hm_list_append(hm_list_t *list, hm_list_node_t *node);
 int hm_list_itr(hm_list_t *list, list_node_fn *itr_fn);
-int hm_list_remove(hm_list_t *list, unsigned int index);
+hm_list_node_t *hm_list_find(hm_list_t *list, list_node_cmp_fn *find_fn, void *userdata);
+int hm_list_remove(hm_list_t *list, unsigned int index, list_node_fn *free_fn);
+int hm_list_remove_where(hm_list_t *list, list_node_cmp_fn *cmp_fn, list_node_fn *free_fn, void *userdata);
 int hm_list_delete(hm_list_t *list, list_node_fn *free_fn);
 
 char *next_arg(char *const str, char d, char *d_opt, int *arglen, bool *optional);

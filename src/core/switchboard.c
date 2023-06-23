@@ -4,6 +4,16 @@
 
 #include "intern/switchboard.h"
 
+int _context_thread_cmp(hm_list_node_t *_ctx, void *_thread_id) {
+  switchboard_context_t *ctx = (switchboard_context_t*)_ctx;
+  context_thread_id thread_id = (context_thread_id)_thread_id;
+  if (ctx->thread_id == thread_id) {
+    return 0;
+  }
+  else {
+    return 1;
+  }
+}
 
 int node_name_is_free(switchboard_node_list_t *list, char *name) {
   switchboard_node_t *node_itr = list->head;
@@ -103,12 +113,12 @@ switchboard_node_t* switchboard_get_node_by_name(switchboard_t *s, const char *n
 }
 
 switchboard_connection_t* switchboard_get_connection(switchboard_node_t *node1, switchboard_node_t *node2) {
-  switchboard_connection_t *node1_conn_itr = node1->connections->head;
+  switchboard_connection_t *node1_conn_itr = hm_list_node_extract(node1->connections->head);
   switchboard_node_t *node1_conn_endpoint = NULL;
   while (node1_conn_itr != NULL) {
     node1_conn_endpoint = (node1_conn_itr->nodes[0] == node1) ? node1_conn_itr->nodes[1] : node1_conn_itr->nodes[0];
     if (node1_conn_endpoint == node2) {
-      return node1_conn_itr;
+      return hm_list_node_extract(node1_conn_itr);
     }
     node1_conn_itr = node1_conn_itr->next;
   }
@@ -138,22 +148,59 @@ bool ctx_same_thread(switchboard_context_t *ctx1, switchboard_context_t *ctx2) {
   return (ctx1->thread_id == ctx2->thread_id);
 }
 
+int _switchboard_node_acquire(switchboard_t *s, switchboard_node_t *node, int flags) {
+  if (node->active_context != NULL) deactivate_context(node->active_context);
+  switchboard_context_t *ctx = get_context(s, node);
+  if (ctx == NULL) ctx = switchboard_add_context(s, node);
+  activate_context(ctx, flags);
+  return 0;
+}
+
+int switchboard_node_acquire(switchboard_t *s, const char *node_name) {
+  switchboard_node_t *node = switchboard_get_node_by_name(s, node_name);
+  return _switchboard_node_acquire(s, node, 0);
+}
+
+int switchboard_node_acquire_nonblock(switchboard_t *s, const char *node_name) {
+  switchboard_node_t *node = switchboard_get_node_by_name(s, node_name);
+  return _switchboard_node_acquire(s, node, SB_NONBLOCKING);
+}
+
+int switchboard_node_release(switchboard_t *s, const char *node_name) {
+  switchboard_node_t *node = switchboard_get_node_by_name(s, node_name);
+  if (node->active_context == NULL) return 0;
+  switchboard_context_t *ctx = get_context(s, node);
+  if (ctx != node->active_context) {
+    return -1; // node mutex held by a different thread
+  }
+  else {
+    deactivate_context(ctx);
+  }
+  return 0;
+}
+
+int switchboard_node_release_all(switchboard_t *s) {
+  context_thread_id current_thread = get_thread_id();
+  return 0;
+}
+
 int switchboard_send_buf_buf(switchboard_t *s, buffer_t *src, buffer_t *dest, unsigned int n_bytes) {
   unsigned int n_bytes_transferred = 0;
   unsigned int src_bytes = buffer_n_read_bytes(src);
   unsigned int dest_bytes = buffer_n_write_bytes(src);
   unsigned int bytes_to_transfer = (src_bytes < dest_bytes) ? src_bytes : dest_bytes;
   bytes_to_transfer = (bytes_to_transfer < n_bytes) ? bytes_to_transfer : n_bytes;
-  void *tmp_buf = malloc(n_bytes);
+  void *tmp_buf = malloc(bytes_to_transfer);
   bytes_to_transfer = buffer_read(src, tmp_buf, bytes_to_transfer);
-  n_bytes_transferred = buffer_write(src, tmp_buf, bytes_to_transfer);
+  n_bytes_transferred = buffer_write(dest, tmp_buf, bytes_to_transfer);
   free(tmp_buf);
   return n_bytes_transferred;
 }
 
-int switchboard_send(switchboard_t *s, switchboard_context_t *src_ctx, unsigned int node_id, unsigned int n_bytes, const int flags) {
-  switchboard_node_t *src_node = src_ctx->node;
-  switchboard_node_t *dest_node = switchboard_get_node_by_id(s, node_id);
+int switchboard_send(switchboard_t *s, const char *src, const char *dest, unsigned int n_bytes, const int flags) {
+  switchboard_node_t *src_node = switchboard_get_node_by_name(s, src);
+  switchboard_node_t *dest_node = switchboard_get_node_by_name(s, dest);
+  switchboard_context_t *src_ctx = src_node->active_context;
   switchboard_context_t *dest_ctx = dest_node->active_context;
   switchboard_connection_t *sb_connection = switchboard_get_connection(src_node, dest_node);
   if (ctx_same_thread(src_ctx, dest_ctx)) goto send;
@@ -171,11 +218,11 @@ int switchboard_send(switchboard_t *s, switchboard_context_t *src_ctx, unsigned 
     goto send;
   }
   send:
-  activate_context(src_ctx, flags);
-  activate_context(dest_ctx, flags);
+  _switchboard_node_acquire(s, src_node, flags);
+  _switchboard_node_acquire(s, dest_node, flags);
   switchboard_send_buf_buf(s, src_node->res.buf, dest_node->res.buf, n_bytes);
-  deactivate_context(src_ctx);
-  deactivate_context(dest_ctx);
+  switchboard_node_release(s, src);
+  switchboard_node_release(s, dest);
   connection_poll_stop(dest_node, sb_connection);
   return 0;
 }

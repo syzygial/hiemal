@@ -79,4 +79,12 @@ int switchboard_add_node(switchboard_t *s, node_type_t node_type, char *node_nam
 
 switchboard_node_t* switchboard_get_node_by_id(switchboard_t *s, unsigned int node_id);
 switchboard_node_t* switchboard_get_node_by_name(switchboard_t *s, const char *node_name);
+
+switchboard_context_t* switchboard_add_context(switchboard_t *s, switchboard_node_t *node);
+switchboard_context_t* get_context(switchboard_t *s, switchboard_node_t *node);
+
+int _context_thread_cmp(hm_list_node_t *_ctx, void *_thread_id);
+
+context_thread_id get_thread_id();
+
 #endif

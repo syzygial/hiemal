@@ -42,7 +42,7 @@ int switchboard_add_buffer(switchboard_t *s, buffer_t *buf, char *name);
 int switchboard_add_async_loop(switchboard_t *s, async_handle_t *async_handle, char *name);
 #endif
 
-int switchboard_send(switchboard_t *s, switchboard_context_t *src_ctx, unsigned int node_id, unsigned int n_bytes, const int flags);
+int switchboard_send(switchboard_t *s, const char *src, const char *dest, unsigned int n_bytes, const int flags);
 
 int switchboard_dump(switchboard_t *s);
 
@@ -50,12 +50,14 @@ int switchboard_dump(switchboard_t *s);
 int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switchboard_node_t *dest, char *name, switchboard_connection_dir dir);
 int switchboard_add_connection_by_name(switchboard_t *s, const char *src, const char *dest, char *name, switchboard_connection_dir dir);
 
-int switchboard_add_context_by_name(switchboard_t *s, const char *node_name);
+switchboard_context_t* switchboard_add_context_by_name(switchboard_t *s, const char *node_name);
 
 int activate_context(switchboard_context_t *ctx, int flags);
 int deactivate_context(switchboard_context_t *ctx);
 
 int connection_poll(switchboard_node_t *recv_node, switchboard_connection_t *connection);
 int connection_poll_stop(switchboard_node_t *recv_node, switchboard_connection_t *connection);
+
+int switchboard_node_acquire(switchboard_t *s, const char *node_name);
 
 #endif
