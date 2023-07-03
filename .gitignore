@@ -14,3 +14,4 @@ hiemal.egg-info/**
 dist/**
 **/*.code-workspace
 **/_local
+**/*.old.*
