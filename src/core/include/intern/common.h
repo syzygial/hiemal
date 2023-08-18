@@ -9,10 +9,17 @@
 
 #include "error.h"
 
+#ifdef __unix__
+#include <pthread.h>
+typedef pthread_t hm_thread_id;
+typedef pthread_mutex_t hm_mutex_t;
+#endif
+
 // base types
 enum {
   HM_LIST_MAGIC=0x1,
   HM_LIST_NODE_MAGIC,
+  HM_ARRAY_MAGIC
 };
 
 // subtypes
@@ -22,6 +29,7 @@ enum {
 
 #define HM_LIST_ASSERT(name) assert(name->magic == HM_LIST_MAGIC);
 #define HM_LIST_NODE_ASSERT(name) assert(name->magic == HM_LIST_NODE_MAGIC);
+#define HM_ARRAY_ASSERT(name) assert(name->magic == HM_ARRAY_MAGIC);
 
 #define UNIT_TESTING
 
@@ -38,18 +46,22 @@ enum {
 typedef void hm_type_t;
 typedef void hm_list_t;
 typedef void hm_list_node_t;
+typedef void hm_array_t;
 
 #define HM_TYPE_HEAD uint64_t magic;
 #define HM_LIST_HEAD(type) uint64_t magic; type *head; unsigned int n_items;
 #define HM_LIST_NODE_HEAD(type) uint64_t magic; type *prev; type *next;
+#define HM_ARRAY_HEAD(type) uint64_t magic; type *buf; unsigned int n_items; unsigned int n_items_alloc; unsigned int item_size;
 
 #define HM_LIST_INIT(name) name->head = NULL; name->n_items = 0; name->magic = HM_LIST_MAGIC;
 #define HM_REFLIST_INIT(name) name->head = NULL; name->n_items = 0; name->magic = ((uint64_t)HM_LIST_REFNODE_MAGIC << 32) | (HM_LIST_MAGIC); 
 #define HM_LIST_NODE_INIT(name) name->prev = NULL; name->next = NULL; name->magic = HM_LIST_NODE_MAGIC;
 #define HM_REFLIST_NODE_INIT(name) name->prev = NULL; name->next = NULL; name->node = NULL; name->magic = ((uint64_t)HM_LIST_REFNODE_MAGIC << 32) | (HM_LIST_NODE_MAGIC);
+#define HM_ARRAY_INIT(name, type) name->buf = NULL; name->n_items = 0; name->n_items_alloc = 0; name->item_size = sizeof(type); name->magic = HM_ARRAY_MAGIC;
 
 typedef int (list_node_fn)(hm_list_node_t *node); 
 typedef int (list_node_cmp_fn)(hm_list_node_t *node, void *userdata); 
+typedef int (array_item_fn)(void *arr_item);
 typedef struct _kwargs {
   int argc;
   char **arg_names;
@@ -66,11 +78,13 @@ typedef struct _kwargs {
  unsigned int n_##type; \
  type##_t **type##s;
 
+/*
 typedef struct _array {
   unsigned int n_items;
   unsigned int max_items;
   void **data;
 } hm_array_t;
+*/
 
 #define IMPL(name) int name##_impl(unsigned int n_bytes, \
   void *_inputs, void *_outputs, kwargs_t *kwargs)
@@ -83,6 +97,7 @@ typedef struct _array {
 bool is_list(hm_type_t *obj);
 bool is_list_node(hm_type_t *obj);
 bool is_list_refnode(hm_type_t *obj);
+bool is_array(hm_type_t *obj);
 
 int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index);
 hm_list_node_t* hm_list_at(hm_list_t *list, unsigned int index);
@@ -94,6 +109,17 @@ int hm_list_remove(hm_list_t *list, unsigned int index, list_node_fn *free_fn);
 int hm_list_remove_where(hm_list_t *list, list_node_cmp_fn *cmp_fn, list_node_fn *free_fn, void *userdata);
 int hm_list_delete(hm_list_t *list, list_node_fn *free_fn);
 
+int hm_array_copy_raw(hm_array_t *arr, void *buf, unsigned int n_items);
+void* hm_array_at(hm_array_t *arr, unsigned int index);
+int hm_array_concat(hm_array_t *arr1, hm_array_t *arr2);
+int hm_array_concat_new(hm_array_t *dest, hm_array_t *arr1, hm_array_t *arr2);
+int hm_array_resize(hm_array_t *arr, unsigned int n_items);
+int hm_array_delete(hm_array_t *arr, array_item_fn *free_fn);
+
 char *next_arg(char *const str, char d, char *d_opt, int *arglen, bool *optional);
 int kwargs_unpack(kwargs_t *kwargs, char *fmt, ...);
+
+#if  defined(__unix__) && defined(__GNUC__)
+int xasprintf(char **str, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+#endif
 #endif

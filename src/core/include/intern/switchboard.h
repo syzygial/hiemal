@@ -20,7 +20,8 @@ typedef union {
   int bd_pipe_fd[2][2]; // bidirectional pipe
 } connection_resource;
 
-
+// TODO: replace these typedef's with the thread/mutex
+// typedefs in common.h
 #ifdef __unix__
 typedef pthread_t context_thread_id;
 typedef pthread_mutex_t node_mutex;

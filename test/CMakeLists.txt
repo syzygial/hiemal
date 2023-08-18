@@ -5,7 +5,8 @@ SET(TEST_FILES
   test_io.c 
   test_async.c
   test_common.c
-  test_switchboard.c)
+  test_switchboard.c
+  test_thread.c)
 
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)

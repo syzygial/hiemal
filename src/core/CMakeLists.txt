@@ -14,10 +14,14 @@ target_sources(hiemal PRIVATE
   device.c
   backend.c
   common.c
-  switchboard.c)
+  switchboard.c
+  thread.c)
 
 if(UNIX)
-  target_sources(hiemal PRIVATE switchboard_unix.c)
+  target_sources(hiemal PRIVATE
+    common_unix.c
+    switchboard_unix.c
+    thread_unix.c)
 endif()
 
 if(WITH_ALSA)

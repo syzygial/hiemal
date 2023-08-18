@@ -1,0 +1,2 @@
+set substitute-path src @CMAKE_SOURCE_DIR@/src
+set substitute-path test @CMAKE_SOURCE_DIR@/test

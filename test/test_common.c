@@ -120,3 +120,35 @@ TEST(hm_list) {
   
   return TEST_SUCCESS;
 }
+
+TEST(hm_array) {
+  struct test_array {
+    HM_ARRAY_HEAD(int)
+  };
+  
+  int buf1_raw[] = {-2,-1,0,1,2};
+  int buf2_raw[] = {3,4,5,6};
+  int buf_concat[] = {-2,-1,0,1,2,3,4,5,6};
+  unsigned int buf1_items = sizeof(buf1_raw) / sizeof(int);
+  unsigned int buf2_items = sizeof(buf2_raw) / sizeof(int);
+  unsigned int buf_concat_items = sizeof(buf_concat) / sizeof(int);
+  double tol = 1e-5;
+
+  struct test_array *arr1 = (struct test_array*)malloc(sizeof(struct test_array));
+  HM_ARRAY_INIT(arr1, int)
+  arr1->buf = (int*)malloc(sizeof(int));
+  hm_array_copy_raw(arr1, buf1_raw, buf1_items);
+  struct test_array *arr2 = (struct test_array*)malloc(sizeof(struct test_array));
+  HM_ARRAY_INIT(arr2, int)
+  arr2->buf = (int*)malloc(sizeof(int));
+  hm_array_copy_raw(arr2, buf2_raw, buf2_items);
+
+  hm_array_concat(arr1, arr2);
+  ASSERT_TRUE(arr1->n_items == buf_concat_items)
+  ASSERT_TRUE(strncmp((char*)(arr1->buf), (char*)(buf_concat), buf_concat_items*sizeof(int)) == 0)
+
+  hm_array_delete(arr1, NULL);
+  hm_array_delete(arr2, NULL);
+
+  return TEST_SUCCESS;
+}

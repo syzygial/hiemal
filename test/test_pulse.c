@@ -13,6 +13,8 @@ TEST(pulse_connection) {
   return TEST_SUCCESS;
 }
 
+// TODO: fix test failure/discrepancy when bluetooth audio devices
+// are connected
 TEST(pulse_n_cards) {
   hm_backend_connection_t *pulse_backend = NULL;
   hm_pulse_connection_init(&pulse_backend);

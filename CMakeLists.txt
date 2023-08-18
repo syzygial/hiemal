@@ -6,6 +6,10 @@ execute_process(COMMAND "git" "status"
 
 project(HIEMAL VERSION 0.1.0)
 
+if(${CMAKE_C_COMPILER_ID} MATCHES "GNU")
+add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>)
+endif()
+
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules ${CMAKE_MODULE_PATH})
 
 if (GIT_STATUS_RET EQUAL "0")
@@ -55,6 +59,9 @@ if(NOT PulseAudio_FOUND)
   set(WITH_PULSEAUDIO "OFF")
 endif()
 
+set(GDBINIT_FIX "OFF" CACHE BOOL "Create .gdbinit file in build directory to fix \
+debug symbol path issues caused by -ffile-prefix-map")
+
 if (WITH_PULSEAUDIO)
   target_link_libraries(hiemal pulse)
 endif()
@@ -80,6 +87,9 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/pkgconfig)
 configure_file(cmake/cmake_info.h.in include/cmake_info.h @ONLY)
 configure_file(cmake/pkgconfig/hiemal.pc.in pkgconfig/hiemal.pc @ONLY)
+if(GDBINIT_FIX)
+configure_file(cmake/gdbinit.in .gdbinit @ONLY)
+endif()
 set_target_properties(hiemal PROPERTIES
   RESOURCE "${RESOURCE_FILES}")
 

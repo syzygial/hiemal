@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define HM_TYPE_ID(magic) (magic & 0xFFFFFFFF)
@@ -23,6 +24,10 @@ struct hm_list_refnode {
 
 struct hm_list {
   HM_LIST_HEAD(hm_list_node_t)
+};
+
+struct hm_array {
+  HM_ARRAY_HEAD(void)
 };
 
 bool is_list (hm_type_t *obj) {
@@ -168,6 +173,54 @@ int hm_list_delete(hm_list_t *list, list_node_fn *free_fn) {
   return 0;
 }
 
+
+int hm_array_resize(hm_array_t *arr, unsigned int n_items) {
+  struct hm_array *_arr = (struct hm_array*)arr;
+  if (_arr->n_items_alloc < n_items) {
+    _arr->buf = realloc(_arr->buf, 2*n_items*_arr->item_size);
+    _arr->n_items_alloc = n_items;
+  }
+  return 0;
+}
+
+int hm_array_copy_raw(hm_array_t *arr, void *buf, unsigned int n_items) {
+  struct hm_array *_arr = (struct hm_array*)arr;
+  hm_array_resize(arr, n_items);
+  _arr->n_items = n_items;
+  strncpy(_arr->buf, buf, n_items*_arr->item_size);
+  return 0;
+}
+
+void* hm_array_at(hm_array_t *arr, unsigned int index) {
+  struct hm_array *_arr = (struct hm_array*)arr;
+  if (index < _arr->n_items) {
+    return (void*)(_arr->buf) + index * _arr->item_size;
+  }
+  else {
+    return NULL;
+  }
+}
+
+int hm_array_concat(hm_array_t *arr1, hm_array_t *arr2) {
+  struct hm_array *_arr1 = (struct hm_array*)arr1;
+  struct hm_array *_arr2 = (struct hm_array*)arr2;
+  int new_size = _arr1->n_items + _arr2->n_items;
+  hm_array_resize(arr1, new_size);
+  strncpy((char*)(_arr1->buf) + _arr1->n_items*_arr1->item_size, _arr2->buf, _arr2->n_items * _arr2->item_size);
+  _arr1->n_items = new_size;
+  return 0;
+}
+
+int hm_array_delete(hm_array_t *arr, array_item_fn *free_fn) {
+  struct hm_array *_arr = (struct hm_array*)arr;
+  if (free_fn != NULL) {
+    int i = 0;
+    for (i = 0; i < _arr->n_items; i++) free_fn(_arr->buf + i);
+  }
+  free(arr);
+  return 0;
+}
+
 int isvarchar(int c) {
   return (isalnum(c) || c == '_') ? 1 : 0;
 }
@@ -241,5 +294,17 @@ int kwargs_unpack(kwargs_t *kwargs, char *fmt, ...) {
     free(key);
   }
   va_end(vars);
+  return 0;
+}
+
+int xasprintf(char **str, char *fmt, ...) {
+  va_list vars, vars_copy;
+  va_start(vars, fmt);
+  va_copy(vars_copy, vars);
+  int n_bytes = vsnprintf(NULL, 0, fmt, vars);
+  *str = (char*)malloc(n_bytes);
+  vsprintf(*str, fmt, vars_copy);
+  va_end(vars);
+  va_end(vars_copy);
   return 0;
 }
