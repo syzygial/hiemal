@@ -15,7 +15,8 @@ target_sources(hiemal PRIVATE
   backend.c
   common.c
   switchboard.c
-  thread.c)
+  thread.c
+  scheduler.c)
 
 if(UNIX)
   target_sources(hiemal PRIVATE
