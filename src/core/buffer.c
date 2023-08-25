@@ -29,8 +29,6 @@
 *   buffer type (LINEAR or RING)
 *   \var _buffer::state
 *   buffer state (EMPTY, FULL or NORMAL)
-*   \var _buffer::in_use
-*   is the buffer currently being read from/written to?
 *   \var _buffer::ext_buf
 *   was the buffer initialized externally (i.e. not with ``buffer_init()``)?
 */
@@ -290,12 +288,12 @@ int buffer_init(buffer_t **buf, unsigned int n_bytes, buffer_type_t type) {
   (*buf)->write_ptr = raw_buffer;
   (*buf)->type = type;
   (*buf)->state = EMPTY;
-  (*buf)->in_use = false;
   (*buf)->ext_buf = false;
   (*buf)->r = NULL;
   (*buf)->r_id = 0;
   buffer_fd_set_init(&((*buf)->fd_set));
   (*buf)->fd_hold = false;
+  thread_mutex_init(&((*buf)->m));
   return 0;
 }
 
@@ -315,12 +313,12 @@ int buffer_init_ext(buffer_t **buf, unsigned int n_bytes, buffer_type_t type, vo
   (*buf)->write_ptr = raw_buffer;
   (*buf)->type = type;
   (*buf)->state = EMPTY;
-  (*buf)->in_use = false;
   (*buf)->ext_buf = true;
   (*buf)->r = NULL;
   (*buf)->r_id = 0;
   buffer_fd_set_init(&((*buf)->fd_set));
   (*buf)->fd_hold = false;
+  thread_mutex_init(&((*buf)->m));
   return 0;
 }
 
@@ -341,16 +339,14 @@ int buffer_delete(buffer_t **buf) {
     free((*buf)->buf);
   }
   buffer_fd_set_delete(&((*buf)->fd_set));
+  thread_mutex_delete(&((*buf)->m));
   free(*buf);
   *buf = NULL;
   return 0;
 }
 
 #define PREPARE_BUF_WRITE(buf) \
-  if (buf->in_use == true) { \
-    return -EAGAIN; \
-  } \
-  buf->in_use = true; \
+  thread_mutex_lock(&(buf->m)); \
   unsigned int n_bytes_available = buffer_n_write_bytes(buf); \
   if (n_bytes_available < n_bytes) { \
     n_bytes = n_bytes_available; \
@@ -365,7 +361,7 @@ int _lbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
   memcpy(dest->write_ptr, src, n_bytes);
   dest->write_ptr += n_bytes;
   set_buffer_state(dest, '-');
-  dest->in_use = false;
+  thread_mutex_unlock(&(dest->m));
   return n_bytes;
 }
 
@@ -393,7 +389,7 @@ int _rbuf_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
     dest->write_ptr += n_bytes;
     set_buffer_state(dest, 'w');
   }
-  dest->in_use = false;
+  thread_mutex_unlock(&(dest->m));
   return n_bytes;
 }
 
@@ -421,10 +417,7 @@ int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes) {
 }
 
 #define PREPARE_BUF_READ(buf) \
-  if (buf->in_use == true) { \
-    return -EAGAIN; \
-  } \
-  buf->in_use = true; \
+  thread_mutex_lock(&(buf->m)); \
   unsigned int n_bytes_available = buffer_n_read_bytes(buf); \
   if (n_bytes_available < n_bytes) { \
     n_bytes = n_bytes_available; \
@@ -441,7 +434,7 @@ int _lbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
   }
   src->read_ptr += n_bytes;
   set_buffer_state(src, '-');
-  src->in_use = false;
+  thread_mutex_unlock(&(src->m));
   return n_bytes;
 }
 
@@ -478,7 +471,7 @@ int _rbuf_read(buffer_t *src, void *dest, unsigned int n_bytes) {
     src->read_ptr += n_bytes;
     set_buffer_state(src, 'r');
   }
-  src->in_use = false;
+  thread_mutex_unlock(&(src->m));
   return n_bytes;
 }
 
@@ -513,7 +506,7 @@ int buffer_view(buffer_t *src, void *dest, unsigned int offset, unsigned int n_b
     else {
       memcpy(dest, src->read_ptr + offset, n_bytes);
     }
-    src->in_use = false;
+    thread_mutex_unlock(&(src->m));
     return n_bytes;
   }
 }

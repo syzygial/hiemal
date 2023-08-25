@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "api/buffer.h"
 #include "api/recording.h"
+#include "intern/thread.h"
 
 typedef struct _buffer_fd_set buffer_fd_set_t;
 
@@ -25,12 +26,12 @@ struct _buffer {
   void *write_ptr;
   buffer_type_t type;
   buffer_state_t state;
-  bool in_use;
   bool ext_buf;
   recording_t *r;
   unsigned int r_id;
   buffer_fd_set_t *fd_set;
   bool fd_hold;
+  hm_mutex_t m;
 };
 
 #endif
