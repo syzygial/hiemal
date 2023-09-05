@@ -26,8 +26,8 @@ int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switch
   switchboard_connection_t *new_connection = (switchboard_connection_t*)malloc(sizeof(switchboard_connection_t));
   HM_LIST_NODE_INIT(new_connection)
   new_connection->connection_type = conn_type;
-  new_connection->nodes[0] = src;
-  new_connection->nodes[1] = dest;
+  (new_connection->nodes)[0] = src;
+  (new_connection->nodes)[1] = dest;
   new_connection->dir = dir;
   new_connection->res = res;
   new_connection->name = strdup(name);

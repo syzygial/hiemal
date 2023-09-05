@@ -72,6 +72,7 @@ int switchboard_add_node(switchboard_t *s, node_type_t node_type, char *node_nam
   new_node->node_id = s->nodes->n_items;
   new_node->connections = (switchboard_connection_list_t*)malloc(sizeof(switchboard_connection_list_t));
   new_node->context_list = (switchboard_context_list_t*)malloc(sizeof(switchboard_context_list_t));
+  new_node->active_context = NULL;
   HM_REFLIST_INIT(new_node->connections);
   HM_REFLIST_INIT(new_node->context_list);
   hm_list_append(s->nodes, new_node);

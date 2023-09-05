@@ -5,6 +5,7 @@ SET(TEST_FILES
   test_io.c 
   test_async.c
   test_common.c
+  test_semaphore.c
   test_switchboard.c
   test_thread.c)
 

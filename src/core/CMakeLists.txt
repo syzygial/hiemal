@@ -20,6 +20,7 @@ target_sources(hiemal PRIVATE
 if(UNIX)
   target_sources(hiemal PRIVATE
     common_unix.c
+    semaphore_unix.c
     switchboard_unix.c
     thread_unix.c)
 endif()

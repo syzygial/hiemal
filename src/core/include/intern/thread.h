@@ -1,4 +1,5 @@
 #ifndef _INTERN_THREAD_H
+#define _INTERN_THREAD_H
 
 #include <stdlib.h>
 
@@ -35,5 +36,5 @@ int thread_mutex_lock(hm_mutex_t *m);
 int thread_mutex_unlock(hm_mutex_t *m);
 int thread_mutex_delete(hm_mutex_t *m);
 int thread_join(hm_thread_id id);
-
+hm_thread_id thread_id();
 #endif

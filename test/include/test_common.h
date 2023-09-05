@@ -1,6 +1,7 @@
 #ifndef _TEST_COMMON_H
 #define _TEST_COMMON_H
 
+#include <stddef.h>
 
 extern const int TEST_SUCCESS;
 extern const int TEST_FAILURE;

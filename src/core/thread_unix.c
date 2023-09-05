@@ -32,3 +32,7 @@ int thread_join(hm_thread_id id) {
   pthread_join(id, NULL);
   return 0;
 }
+
+hm_thread_id thread_id() {
+  return pthread_self();
+}
