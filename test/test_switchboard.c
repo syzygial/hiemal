@@ -111,3 +111,7 @@ TEST(switchboard_send_buf_buf) {
   buffer_delete(&buf1);
   return TEST_SUCCESS;
 }
+
+TEST(switchboard_send_buf_dsp) {
+  return TEST_FAILURE;
+}
