@@ -25,6 +25,7 @@ int switchboard_add_connection(switchboard_t *s, switchboard_node_t *src, switch
   }
   switchboard_connection_t *new_connection = (switchboard_connection_t*)malloc(sizeof(switchboard_connection_t));
   HM_LIST_NODE_INIT(new_connection)
+  new_connection->free_fn = switchboard_connection_delete;
   new_connection->connection_type = conn_type;
   (new_connection->nodes)[0] = src;
   (new_connection->nodes)[1] = dest;
@@ -62,8 +63,8 @@ int activate_context(switchboard_context_t *ctx, int flags) {
   if (node->active_context == ctx) {
     return 0;
   }
-  if (HM_FLAG_SET(flags, SB_NONBLOCKING)) rc = pthread_mutex_lock(&(node->mutex));
-  else rc = pthread_mutex_trylock(&(node->mutex));
+  if (HM_FLAG_SET(flags, SB_NONBLOCKING)) rc = pthread_mutex_trylock(&(node->mutex));
+  else rc = pthread_mutex_lock(&(node->mutex));
   node->active_context = ctx;
   return rc;
 }

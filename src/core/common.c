@@ -1,8 +1,11 @@
 #include "intern/common.h"
+#include "intern/math.h"
 
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,10 +14,12 @@
 
 struct hm_type {
   HM_TYPE_HEAD
+  uint8_t data[];
 };
 
 struct hm_list_node {
   HM_LIST_NODE_HEAD(hm_list_node_t)
+  uint8_t data[];
 };
 
 struct hm_list_refnode {
@@ -29,6 +34,13 @@ struct hm_list {
 struct hm_array {
   HM_ARRAY_HEAD(void)
 };
+
+int default_node_free(hm_list_node_t *node) {
+  free(node);
+  return 0;
+}
+
+list_node_fn *default_node_free_fn = default_node_free;
 
 bool is_list (hm_type_t *obj) {
   struct hm_type *_obj = (struct hm_type*)obj;
@@ -70,6 +82,36 @@ int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index) {
   return 0;
 }
 
+int hm_list_clear(hm_list_t *list) {
+  struct hm_list *_list = (struct hm_list*)list;
+  struct hm_list_node *node_itr = _list->head;
+  struct hm_list_node *node_next = node_itr;
+
+  while (node_itr != NULL) {
+    node_next = node_itr->next;
+    if (node_itr->free_fn != NULL) (node_itr->free_fn)(node_itr);
+    node_itr = node_next;
+  }
+  _list->n_items = 0;
+  return 0;
+}
+
+int hm_list_copy_array(hm_list_t *list, hm_array_t *arr, int flags) {
+  struct hm_list *_list = (struct hm_list*)list;
+  struct hm_array *_arr = (struct hm_array*)arr;
+  if (HM_FLAG_SET(flags, COPY_OVERWRITE)) {
+    hm_list_clear(list);
+  }
+  struct hm_list_node *new_node = NULL;
+  int i = 0;
+  for (i = 0; i < _arr->n_items; i++) {
+    new_node = (hm_list_node_t*)malloc(offsetof(struct hm_list_node, data) + _arr->item_size);
+    strncpy(new_node->data, _arr->buf + (i*_arr->item_size), _arr->item_size);
+    hm_list_append(list, new_node);
+  }
+  return 0;
+}
+
 hm_list_node_t* hm_list_at(hm_list_t *list, unsigned int index) {
   struct hm_list *_list = (struct hm_list*)list;
   struct hm_list_node *node_itr = (struct hm_list_node*)(_list->head);
@@ -80,10 +122,9 @@ hm_list_node_t* hm_list_at(hm_list_t *list, unsigned int index) {
   int i = 0;
   for (i = 0; i < index; i++) {
     node_itr = node_itr->next;
-    if (HM_SUBTYPE_ID(_list->magic) == HM_LIST_REFNODE_MAGIC) return node_itr;
-    else return ((struct hm_list_refnode*)node_itr)->node;
   }
-  return NULL;
+    if (HM_SUBTYPE_ID(_list->magic) == HM_LIST_REFNODE_MAGIC) return ((struct hm_list_refnode*)node_itr)->node;
+    else return node_itr;
 }
 
 hm_list_node_t* hm_list_node_extract(hm_list_node_t *node) {
@@ -160,15 +201,8 @@ int hm_list_remove_where(hm_list_t *list, list_node_cmp_fn *cmp_fn, list_node_fn
   return 0;
 }
 
-int hm_list_delete(hm_list_t *list, list_node_fn *free_fn) {
-  struct hm_list_node *node_itr = ((struct hm_list*)list)->head;
-  struct hm_list_node *node_next = node_itr;
-
-  while (node_itr != NULL) {
-    node_next = node_itr->next;
-    (free_fn) ? (*free_fn)(node_itr) : free(node_itr);
-    node_itr = node_next;
-  }
+int hm_list_delete(hm_list_t *list) {
+  hm_list_clear(list);
   free(list);
   return 0;
 }
@@ -191,6 +225,47 @@ int hm_array_copy_raw(hm_array_t *arr, void *buf, unsigned int n_items) {
   return 0;
 }
 
+int hm_array_clear(hm_array_t *arr) {
+  struct hm_array *_arr = (struct hm_array*)arr;
+  free(_arr->buf);
+  _arr->buf = NULL;
+  _arr->n_items = 0;
+  _arr->n_items_alloc = 0;
+  return 0;
+}
+
+int hm_array_copy_list(hm_array_t *arr, hm_list_t *list, int flags) {
+  struct hm_array *_arr = (struct hm_array*)arr;
+  struct hm_list *_list = (struct hm_list*)list;
+  if (HM_FLAG_SET(flags, COPY_OVERWRITE)) {
+    hm_array_clear(arr);
+  }
+  void **list_data = (void**)malloc(_list->n_items * sizeof(void*));
+  uint64_t *list_data_len = (uint64_t*)malloc(_list->n_items * _list->n_items);
+  int i = 0;
+  int get_list_data(hm_list_node_t *node) {
+    struct hm_list_node *_node = (struct hm_list_node*)node;
+    list_data[i] = _node->data;
+    list_data_len[i] = _node->data_size;
+    i++;
+    return 0;
+  }
+  hm_list_itr(list, get_list_data);
+  i = 0;
+  int ii = 0; // running sum of list node sizes
+  uint64_t new_arr_len = u64sum(list_data_len, _list->n_items);
+  // TODO: add coherence check re. non-uniform lists/arrays
+  void *new_arr_data = (void*)malloc(new_arr_len);
+  for (i = 0; i < _list->n_items; i++) {
+    strncpy(new_arr_data + ii, list_data[i], list_data_len[i]);
+    ii += list_data_len[i];
+  }
+  hm_array_concat_raw(arr, new_arr_data, _list->n_items);
+  free(list_data_len);
+  free(list_data);
+  return 0;
+}
+
 void* hm_array_at(hm_array_t *arr, unsigned int index) {
   struct hm_array *_arr = (struct hm_array*)arr;
   if (index < _arr->n_items) {
@@ -206,8 +281,20 @@ int hm_array_concat(hm_array_t *arr1, hm_array_t *arr2) {
   struct hm_array *_arr2 = (struct hm_array*)arr2;
   int new_size = _arr1->n_items + _arr2->n_items;
   hm_array_resize(arr1, new_size);
-  strncpy((char*)(_arr1->buf) + _arr1->n_items*_arr1->item_size, _arr2->buf, _arr2->n_items * _arr2->item_size);
+  memcpy((char*)(_arr1->buf) + _arr1->n_items*_arr1->item_size, _arr2->buf, _arr2->n_items * _arr2->item_size);
   _arr1->n_items = new_size;
+  return 0;
+}
+
+int hm_array_concat_raw(hm_array_t *arr, void *data, unsigned int n_items) {
+  struct hm_array *_arr1 = (struct hm_array*)arr;
+  struct hm_array *_new_arr = (struct hm_array*)malloc(sizeof(struct hm_array));
+  HM_ARRAY_INIT_LIKE(_new_arr, _arr1)
+  hm_array_resize(_new_arr, n_items);
+  _new_arr->n_items = n_items;
+  memcpy(_new_arr->buf, data, n_items*_new_arr->item_size);
+  hm_array_concat(arr, _new_arr);
+  free(_new_arr);
   return 0;
 }
 

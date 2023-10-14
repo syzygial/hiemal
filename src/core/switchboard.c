@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "intern/switchboard.h"
-
+#include "intern/thread.h"
 int _context_thread_cmp(hm_list_node_t *_ctx, void *_thread_id) {
   switchboard_context_t *ctx = (switchboard_context_t*)_ctx;
   context_thread_id thread_id = (context_thread_id)_thread_id;
@@ -39,9 +39,10 @@ int switchboard_init(switchboard_t **s) {
 int switchboard_node_delete(hm_list_node_t *node) {
   switchboard_node_t *_node = (switchboard_node_t*)node;
   //free(_node->connections);
-  hm_list_delete(_node->connections, NULL);
+  hm_list_delete(_node->connections);
   //free(_node->context_list);
-  hm_list_delete(_node->context_list, NULL);
+  hm_list_delete(_node->context_list);
+  thread_mutex_delete(&(_node->mutex));
   free(_node->name);
   free(_node);
   return 0;
@@ -55,9 +56,9 @@ int switchboard_connection_delete(hm_list_node_t *connection) {
 }
 
 int switchboard_delete(switchboard_t **s) {
-  hm_list_delete((*s)->nodes, switchboard_node_delete);
-  hm_list_delete((*s)->connections, switchboard_connection_delete);
-  hm_list_delete((*s)->context_list, NULL);
+  hm_list_delete((*s)->nodes);
+  hm_list_delete((*s)->connections);
+  hm_list_delete((*s)->context_list);
   free(*s);
   *s = NULL;
   return 0;
@@ -66,6 +67,7 @@ int switchboard_delete(switchboard_t **s) {
 int switchboard_add_node(switchboard_t *s, node_type_t node_type, char *node_name, node_resource node_res) {
   switchboard_node_t *new_node = malloc(sizeof(switchboard_node_t));
   HM_LIST_NODE_INIT(new_node)
+  new_node->free_fn = switchboard_node_delete;
   new_node->type = node_type;
   new_node->res = node_res;
   new_node->name = strdup(node_name);
@@ -73,6 +75,7 @@ int switchboard_add_node(switchboard_t *s, node_type_t node_type, char *node_nam
   new_node->connections = (switchboard_connection_list_t*)malloc(sizeof(switchboard_connection_list_t));
   new_node->context_list = (switchboard_context_list_t*)malloc(sizeof(switchboard_context_list_t));
   new_node->active_context = NULL;
+  thread_mutex_init(&(new_node->mutex));
   HM_REFLIST_INIT(new_node->connections);
   HM_REFLIST_INIT(new_node->context_list);
   hm_list_append(s->nodes, new_node);

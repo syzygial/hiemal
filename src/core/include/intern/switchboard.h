@@ -88,4 +88,7 @@ int _context_thread_cmp(hm_list_node_t *_ctx, void *_thread_id);
 
 context_thread_id get_thread_id();
 
+int switchboard_node_delete(hm_list_node_t *node);
+int switchboard_connection_delete(hm_list_node_t *connection);
+
 #endif

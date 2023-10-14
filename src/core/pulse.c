@@ -274,7 +274,7 @@ int hm_pulse_connection_close(hm_backend_connection_t **pulse_backend) {
     free(cur_device);
   }
   free((*pulse_backend)->devices);
-  hm_list_delete((*pulse_backend)->dev_io_list, NULL);
+  hm_list_delete((*pulse_backend)->dev_io_list);
   free(*pulse_backend);
   *pulse_backend = NULL;
   return 0;
