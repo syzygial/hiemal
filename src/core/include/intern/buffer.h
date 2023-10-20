@@ -7,6 +7,7 @@
 #include "api/buffer.h"
 #include "api/recording.h"
 #include "intern/thread.h"
+#include "intern/event.h"
 
 typedef struct _buffer_fd_set buffer_fd_set_t;
 
@@ -18,6 +19,8 @@ int buffer_fd_set_insert(buffer_fd_set_t *fd_set, int fd);
 int buffer_fd_hold(buffer_t *buf);
 int buffer_fd_release(buffer_t *buf);
 int buffer_fd_drain(buffer_t *buf);
+
+int buffer_event_add(buffer_t *buf, hm_event_t *e);
 
 struct _buffer {
   void *buf;
@@ -32,6 +35,7 @@ struct _buffer {
   buffer_fd_set_t *fd_set;
   bool fd_hold;
   hm_mutex_t m;
+  hm_event_list_t *event_list;
 };
 
 #endif

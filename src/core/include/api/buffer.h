@@ -15,6 +15,7 @@ typedef struct _buf_array {
 typedef enum _rbuf_io_resource rbuf_io_resource_t;
 typedef enum {RING=0, LINEAR} buffer_type_t;
 typedef enum {NORMAL=0, EMPTY, FULL} buffer_state_t;
+typedef enum {READ=0, WRITE} buffer_io_type_t;
 
 int buffer_set_rpos(buffer_t *buf, unsigned int pos);
 int buffer_set_wpos(buffer_t *buf, unsigned int pos);
@@ -38,5 +39,4 @@ int buffer_write(buffer_t *dest, const void *src, unsigned int n_bytes);
 int buffer_read(buffer_t *src, void *dest, unsigned int n_bytes);
 
 int buffer_view(buffer_t *src, void *dest, unsigned int offset, unsigned int n_bytes);
-
 #endif
