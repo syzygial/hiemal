@@ -388,7 +388,7 @@ int xasprintf(char **str, char *fmt, ...) {
   va_list vars, vars_copy;
   va_start(vars, fmt);
   va_copy(vars_copy, vars);
-  int n_bytes = vsnprintf(NULL, 0, fmt, vars);
+  int n_bytes = vsnprintf(NULL, 0, fmt, vars) + 1;
   *str = (char*)malloc(n_bytes);
   vsprintf(*str, fmt, vars_copy);
   va_end(vars);
