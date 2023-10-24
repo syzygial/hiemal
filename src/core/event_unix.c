@@ -45,6 +45,8 @@ bool is_event_buf_list(hm_event_list_t *l) {
 int hm_event_list_init(hm_event_list_t **l) {
   *l = (hm_event_list_t*)malloc(sizeof(hm_event_list_t));
   HM_LIST_INIT((*l))
+  (*l)->n_buffer = 0;
+  (*l)->n_fd = 0;
   return 0;
 }
 
@@ -114,15 +116,19 @@ int hm_poll_fd_list(hm_event_list_t *l) {
     fds[i].events = POLLIN;
     e = e->next;
   }
+  int n_events = 0;
   poll_fds:
   poll(fds, l->n_items, -1);
   for (i = 0; i < l->n_items; i++) {
     if (HM_FLAG_SET(fds[i].fd, POLLIN)) {
       e = hm_list_at(l, i);
-      if (e->cond(e, NULL) != 0) goto poll_fds;
-      else break;
+      if (e->cond(e, NULL) == 0) {
+        if (e->cb != NULL) e->cb(e, NULL);
+        n_events++;
+      }
     }
   }
+  if (n_events == 0) goto poll_fds;
   free(fds);
   return 0;
 }
