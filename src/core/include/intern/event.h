@@ -6,6 +6,7 @@ typedef struct _hm_event_list hm_event_list_t;
 typedef struct _buffer_io_event buffer_io_event_t;
 
 typedef int (event_condition)(hm_event_t*, void*);
+typedef int (event_callback)(hm_event_t*, void*);
 
 enum hm_event_obj_type {
   OBJ_FD=0,
@@ -28,6 +29,7 @@ struct _hm_event {
   union hm_event_obj obj;
   enum hm_event_obj_type obj_type;
   event_condition *cond;
+  event_callback *cb;
 };
 
 struct _hm_event_list {
