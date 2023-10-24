@@ -144,6 +144,12 @@ int hm_poll_buffer(hm_event_t *e) {
   return 0;
 }
 
+int hm_poll_buffer_list(hm_event_list_t *l) {
+  if (!is_event_buf_list(l)) return -1;
+
+  return 0;
+}
+
 int hm_event_buffer_wake(hm_event_list_t *buf_event_list, buffer_io_type_t io_type, unsigned int n_bytes_transferred, unsigned int n_bytes_readable, unsigned int n_bytes_writeable) {
   buffer_io_event_t *buf_io_info = NULL;
   // TODO: use reference counting to wake up multiple events instead of making copies of
