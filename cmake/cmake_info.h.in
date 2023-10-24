@@ -7,3 +7,4 @@
 #cmakedefine WITH_ALSA
 #cmakedefine WITH_PULSEAUDIO
 #cmakedefine WITH_PROTOBUF
+#cmakedefine TEST_MTRACE

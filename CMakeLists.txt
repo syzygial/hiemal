@@ -59,6 +59,8 @@ if(NOT PulseAudio_FOUND)
   set(WITH_PULSEAUDIO "OFF")
 endif()
 
+set(TEST_MTRACE "OFF" CACHE BOOL "Run tests with mtrace enabled")  
+
 set(GDBINIT_FIX "OFF" CACHE BOOL "Create .gdbinit file in build directory to fix \
 debug symbol path issues caused by -ffile-prefix-map")
 
@@ -162,5 +164,12 @@ if (SPHINX_COMMIT_INFO)
   message(STATUS "  Sphinx add commit info to footer: YES")
 else()
   message(STATUS "  Sphinx add commit info to footer: NO")
+endif()
+message(STATUS "")
+message(STATUS "Tests")
+if (TEST_MTRACE)
+  message(STATUS "  Run tests with mtrace: YES")
+else()
+  message(STATUS "  Run tests with mtrace: NO")
 endif()
 message(STATUS "")

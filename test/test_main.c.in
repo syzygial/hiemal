@@ -1,7 +1,13 @@
+#include <stdlib.h>
 #include <time.h>
+
+#ifdef TEST_MTRACE
+#include <mcheck.h>
+#endif
 
 #include "test_common.h"
 #include "util.h"
+#include "cmake_info.h"
 
 %%TEST_DECLARATIONS%%
 
@@ -17,6 +23,10 @@ char *test_msg(int result) {
 }
 
 int main(int argc, char **argv) {
+  #ifdef TEST_MTRACE
+  if (getenv("MALLOC_TRACE") == NULL) setenv("MALLOC_TRACE", "test_trace.txt", 0);
+  mtrace();
+  #endif
   testing_results_t results;
   results.n_tests = %%N_TESTS%%;
   results.tests = (test_info_t*)malloc(results.n_tests*sizeof(test_info_t));
