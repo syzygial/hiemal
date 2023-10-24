@@ -32,6 +32,8 @@ struct _hm_event {
 
 struct _hm_event_list {
   HM_LIST_HEAD(hm_event_t)
+  unsigned int n_fd;
+  unsigned int n_buffer;
 };
 
 struct _buffer_io_event {

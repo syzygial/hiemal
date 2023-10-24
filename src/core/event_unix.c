@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <poll.h>
@@ -33,6 +34,14 @@ int futex_wake(uint32_t *uaddr, uint32_t val) {
 #include "intern/event.h"
 #include "intern/thread.h"
 
+bool is_event_fd_list(hm_event_list_t *l) {
+  return (l->n_items > 0 && l->n_fd == l->n_items) ? true : false;
+}
+
+bool is_event_buf_list(hm_event_list_t *l) {
+  return (l->n_items > 0 && l->n_buffer == l->n_items) ? true : false;
+}
+
 int hm_event_list_init(hm_event_list_t **l) {
   *l = (hm_event_list_t*)malloc(sizeof(hm_event_list_t));
   HM_LIST_INIT((*l))
@@ -42,6 +51,8 @@ int hm_event_list_init(hm_event_list_t **l) {
 int hm_event_reflist_init(hm_event_list_t **l) {
   *l = (hm_event_list_t*)malloc(sizeof(hm_event_list_t));
   HM_REFLIST_INIT((*l))
+  (*l)->n_buffer = 0;
+  (*l)->n_fd = 0;
   return 0;
 }
 
@@ -71,6 +82,16 @@ int hm_event_delete(hm_event_t **e) {
 }
 
 int hm_event_list_add(hm_event_list_t *l, hm_event_t *e) {
+  hm_list_append(l, e);
+  switch (e->obj_type) {
+    case OBJ_FD:
+      l->n_fd++;
+      break;
+    case OBJ_BUFFER:
+      l->n_buffer++;
+      break;
+    default:
+  }
   return 0;
 }
 
