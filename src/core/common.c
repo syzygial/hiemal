@@ -18,7 +18,7 @@ struct hm_type {
 };
 
 struct hm_list_node {
-  HM_LIST_NODE_HEAD(hm_list_node_t)
+  HM_LIST_NODE_HEAD(struct hm_list_node)
   uint8_t data[];
 };
 
@@ -28,7 +28,7 @@ struct hm_list_refnode {
 };
 
 struct hm_list {
-  HM_LIST_HEAD(hm_list_node_t)
+  HM_LIST_HEAD(struct hm_list_node)
 };
 
 struct hm_array {
@@ -67,7 +67,8 @@ int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index) {
   }
   if (HM_SUBTYPE_ID(_list->magic) == 0) {
     _node->next = *node_itr;
-    _node->prev = *node_prev;
+    _node->prev = (index == 0) ? NULL : *node_prev;
+    if (*node_itr) (*node_itr)->prev = _node;
     *node_itr = _node;
   }
   else if (HM_SUBTYPE_ID(_list->magic) == HM_LIST_REFNODE_MAGIC) {
@@ -75,7 +76,8 @@ int hm_list_insert(hm_list_t *list, hm_list_node_t *node, unsigned int index) {
     HM_REFLIST_NODE_INIT(new_refnode);
     new_refnode->node = node;
     new_refnode->next = (struct hm_list_refnode*)(*node_itr);
-    new_refnode->prev = (struct hm_list_refnode*)(*node_prev);
+    new_refnode->prev = (index == 0) ? NULL : (struct hm_list_refnode*)(*node_prev);
+    if (*node_itr) (*node_itr)->prev = (struct hm_list_node*)new_refnode;
     *node_itr = (struct hm_list_node*)new_refnode;
   }
   _list->n_items++;
@@ -173,7 +175,7 @@ int hm_list_remove(hm_list_t *list, unsigned int index, list_node_fn *free_fn) {
   }
   struct hm_list_node *old_node = *node_itr;
   *node_itr = (struct hm_list_node*)(old_node->next);
-  if (*node_itr != NULL)(*node_itr)->prev = *node_prev;
+  if (*node_itr != NULL)(*node_itr)->prev = old_node->prev;
   (free_fn) ? (*free_fn)(old_node) : free(old_node);
   _list->n_items--;
   return 0;
@@ -181,19 +183,23 @@ int hm_list_remove(hm_list_t *list, unsigned int index, list_node_fn *free_fn) {
 
 int hm_list_remove_where(hm_list_t *list, list_node_cmp_fn *cmp_fn, list_node_fn *free_fn, void *userdata) {
   struct hm_list *_list = (struct hm_list*)list;
-  struct hm_list_node **node_itr = (struct hm_list_node**)&(_list->head);
-  struct hm_list_node **node_itr_next = NULL;
-  struct hm_list_node **node_prev = node_itr;
-  struct hm_list_node *old_node = NULL;
+  //struct hm_list_node **node_itr = (struct hm_list_node**)&(_list->head);
+  //struct hm_list_node **node_prev = node_itr;
+  struct hm_list_node *node_itr = _list->head;
+  //struct hm_list_node *old_node = NULL;
+  struct hm_list_node *node_prev = NULL;
   int i = 0;
-  while (*node_itr != NULL) {
+  while (node_itr != NULL) {
     node_prev = node_itr;
-    old_node = *node_itr;
-    node_itr = (struct hm_list_node**)&(old_node->next);
-    if((*cmp_fn)(old_node, userdata) == 0) {
-      *node_prev = (struct hm_list_node*)(old_node->next);
-      if (*node_prev != NULL) (*node_prev)->prev = *node_prev;
-      (free_fn) ? (*free_fn)(old_node) : free(old_node);
+    //old_node = *node_itr;
+    node_itr = node_itr->next;
+    if((*cmp_fn)(node_prev, userdata) == 0) {
+      //*node_prev = (struct hm_list_node*)(old_node->next);
+      if (node_prev->prev != NULL) node_prev->prev->next = node_itr;
+      else _list->head = node_itr;
+      //if (*node_prev != NULL) (*node_prev)->prev = *node_prev;
+      node_itr->prev = node_prev->prev;
+      (free_fn) ? (*free_fn)(node_prev) : free(node_prev);
       _list->n_items--;
     }
     i++;
