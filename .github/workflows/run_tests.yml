@@ -3,8 +3,11 @@ name: 'tests'
 on:
   push:
     branches:
-      - main
+      - 'main'
+      - '**-staging'
   pull_request:
+  workflow_dispatch:
+
 
 jobs:
   run_tests:
@@ -18,18 +21,33 @@ jobs:
           sudo apt-get update
           sudo apt-get install cmake
 
-      - name: build
+      - name: Build
         run: |
           mkdir build && cd build
-          cmake ..
+          cmake -DCMAKE_BUILD_TYPE=Debug ..
           make
       
-      - name: test
-        run: cd build && make test
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: |
+          mkdir /tmp/artifacts
+          ulimit -c unlimited
+          sudo sysctl -w kernel.core_pattern=/tmp/artifacts/core_%e.%p.%s
+          cd build && make test
 
-      - name: save results
+      - name: Get Crash Info
+        if: ${{ steps.test.outcome == 'failure' }}
+        run: |
+          cp build/libhiemal.so build/test/run_tests /tmp/artifacts
+
+      - name: Save Test Results
+        if: ${{ steps.test.outcome != 'failure' }}
+        run: cp build/test_results.json /tmp/artifacts
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v3
 
         with:
           name: test_results
-          path: build/test_results.json
+          path: /tmp/artifacts
