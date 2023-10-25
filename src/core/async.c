@@ -65,16 +65,6 @@ int async_loop_init(async_handle_t **h)
   (*h)->thread_created = false;
   (*h)->n_fn = 0;
   (*h)->thread_id = (pthread_t)NULL;
-  (*h)->async_fds = (struct pollfd*)malloc(100*sizeof(struct pollfd));
-  (*h)->n_fds_alloc = 100;
-  int msg_fds[2];
-  pipe(msg_fds);
-  (*h)->msg_fd = msg_fds[1];
-  ((*h)->async_fds)[0].fd = msg_fds[0];
-  ((*h)->async_fds)[0].events = POLLIN;
-  (*h)->n_fds = 1;
-  async_fd_map_init(&((*h)->map));
-  async_fd_map_insert((*h)->map, msg_fds[0], ASYNC_MSG,-1);
   return 0;
 }
 
@@ -84,8 +74,6 @@ int async_loop_init(async_handle_t **h)
  */
 int async_loop_delete(async_handle_t **h)
 {
-  async_fd_map_delete(&((*h)->map));
-  free((*h)->async_fds);
   free(*h);
   *h = NULL;
   return 0;
