@@ -2,6 +2,7 @@
 #define _ASYNC_H
 
 #include "intern/common.h"
+#include "intern/event.h"
 
 typedef struct _async_handle async_handle_t;
 typedef struct _async_args {
