@@ -107,6 +107,7 @@ int hm_poll_fd(hm_event_t *e) {
 }
 
 int hm_poll_fd_list(hm_event_list_t *l) {
+  if (!is_event_fd_list(l)) return -1;
   struct pollfd *fds = (struct pollfd*)malloc(l->n_items * sizeof(struct pollfd));
   unsigned int i = 0;
   hm_event_t *e = l->head;
@@ -120,7 +121,7 @@ int hm_poll_fd_list(hm_event_list_t *l) {
   poll_fds:
   poll(fds, l->n_items, -1);
   for (i = 0; i < l->n_items; i++) {
-    if (HM_FLAG_SET(fds[i].fd, POLLIN)) {
+    if (HM_FLAG_SET(fds[i].revents, POLLIN)) {
       e = hm_list_at(l, i);
       if (e->cond(e, NULL) == 0) {
         if (e->cb != NULL) e->cb(e, NULL);
@@ -152,7 +153,29 @@ int hm_poll_buffer(hm_event_t *e) {
 
 int hm_poll_buffer_list(hm_event_list_t *l) {
   if (!is_event_buf_list(l)) return -1;
-
+  struct pollfd *fds = (struct pollfd*)malloc(l->n_items * sizeof(struct pollfd));
+  unsigned int i = 0;
+  hm_event_t *e = l->head;
+  for (i = 0; i < l->n_items; i++) {
+    if ((e->obj_type) != OBJ_FD) return -1;
+    fds[i].fd = e->obj.buf_pipe[0];
+    fds[i].events = POLLIN;
+    e = e->next;
+  }
+  int n_events = 0;
+  poll_fds:
+  poll(fds, l->n_items, -1);
+  for (i = 0; i < l->n_items; i++) {
+    if (HM_FLAG_SET(fds[i].revents, POLLIN)) {
+      e = hm_list_at(l, i);
+      if (e->cond(e, NULL) == 0) {
+        if (e->cb != NULL) e->cb(e, NULL);
+        n_events++;
+      }
+    }
+  }
+  if (n_events == 0) goto poll_fds;
+  free(fds);
   return 0;
 }
 
