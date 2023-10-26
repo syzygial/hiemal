@@ -6,20 +6,11 @@
 #include "intern/thread.h"
 #include <stdbool.h>
 
-typedef struct _async_fd_map async_fd_map_t;
-
 struct _async_handle {
+  hm_event_list_t *l;
   bool loop_active;
   bool thread_created;
-  pthread_t thread_id;
-  unsigned int n_fn;
-  struct pollfd* async_fds;
-  async_fd_map_t *map;
-  int msg_fd;
-  void *inputs[ASYNC_LOOP_MAX_FN];
-  void *outputs[ASYNC_LOOP_MAX_FN];
-  kwargs_t kwargs[ASYNC_LOOP_MAX_FN];
-  int (*fn_ptrs[ASYNC_LOOP_MAX_FN])(IMPL_ARGS);
+  hm_thread_id thread_id;
 };
 
 int async_fd_map_init(async_fd_map_t **map);
