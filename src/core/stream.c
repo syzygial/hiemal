@@ -14,6 +14,15 @@ struct _encoder_stack {
   HM_LIST_HEAD(struct _encoder)
 };
 
+struct _decoder {
+  HM_LIST_NODE_HEAD(struct _decoder)
+  stream_fn *decoder_fn;
+};
+
+struct _decoder_stack {
+  HM_LIST_HEAD(struct _decoder)
+};
+
 struct _stream {
   encoder_stack *enc;
   decoder_stack *dec;
