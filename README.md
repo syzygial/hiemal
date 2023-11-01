@@ -5,10 +5,12 @@
 ![Hiemal Version](https://img.shields.io/badge/version-0.1.0-blue)
 [![tests](https://github.com/hiemal-audio/hiemal/actions/workflows/run_tests.yml/badge.svg)](https://github.com/hiemal-audio/hiemal/actions/workflows/run_tests.yml)
 
+> [!WARNING]
+> This project is very young and under active development, so the public API should not be considered stable and might change with little notice.
+
 Hiemal is a lightweight C audio library which aims to provide a simple 
 interface for building signal chains for low-latency, real-time audio 
-processing including DSP, file i/o, etc.  This project is very young 
-and under active development, so the public API should not be considered stable and might change with little notice.
+processing including DSP, file i/o, etc.  
 
 # Supported Platforms
 
