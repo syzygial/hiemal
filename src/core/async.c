@@ -44,7 +44,6 @@ int async_loop_init(async_handle_t **h)
   (*h)->thread_created = (bool *)malloc(sizeof(bool));
   (*h)->loop_active = false;
   (*h)->thread_created = false;
-  (*h)->n_fn = 0;
   (*h)->thread_id = (pthread_t)NULL;
   return 0;
 }
