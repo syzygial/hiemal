@@ -52,6 +52,7 @@ int hm_event_reflist_init(hm_event_list_t **l);
 int hm_event_list_delete(hm_event_list_t **l);
 
 int hm_event_poll(hm_event_t *e);
+int hm_event_poll_list(hm_event_list_t *l);
 
 int hm_event_buffer_wake(hm_event_list_t *buf_event_list, buffer_io_type_t io_type, unsigned int n_bytes_transferred, unsigned int n_bytes_readable, unsigned int n_bytes_writeable);
 

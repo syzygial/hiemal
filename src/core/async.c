@@ -6,31 +6,12 @@
 #include "intern/async.h"
 
 
-void *_async_loop(void *_h) {
-  async_handle_t *h = (async_handle_t *)_h;
-  int i;
-  int i_fn;
-  int n_samples;
-  h->loop_active = true;
-  while (h->loop_active) {
-    poll(h->async_fds,h->n_fds, -1);
-    n_samples = 0;
-    for (i = 0; i < h->n_fds; i++) {
-      if ((h->async_fds)[i].revents & POLLIN == POLLIN) {
-        if (async_fd_map_get_fd_type(h->map, (h->async_fds)[i].fd) == INTERN_PIPE) {
-          read((h->async_fds)[i].fd, &n_samples, 4);
-        }
-        else if (async_fd_map_get_fd_type(h->map, (h->async_fds)[i].fd) == EXTERN) {
-          ioctl((h->async_fds)[i].fd, FIONREAD, &n_samples);
-        }
-        else {
-          break;
-        }
-        i_fn = async_fd_map_get_index(h->map, (h->async_fds)[i].fd);
-        (*(h->fn_ptrs)[i_fn])(n_samples, (h->inputs)[i_fn], (h->outputs)[i_fn], &((h->kwargs)[i_fn]));
-      }
-    }
+void *_async_loop(void *h) {
+  async_handle_t *_h = (async_handle_t *)h;
+  while(1) {
+    hm_event_poll_list(_h->l);
   }
+  return NULL;
 }
 
 void async_loop_dispatch(async_handle_t *h)
