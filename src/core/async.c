@@ -8,6 +8,7 @@
 
 void *_async_loop(void *h) {
   async_handle_t *_h = (async_handle_t *)h;
+  _h->loop_active = true;
   while(1) {
     hm_event_poll_list(_h->l);
   }
@@ -26,13 +27,12 @@ void async_loop_dispatch(async_handle_t *h)
 
 void async_loop_stop(async_handle_t *h)
 {
-  char msg = '\0';
+  pthread_cancel(h->thread_id);
+  pthread_join(h->thread_id, NULL);
   h->thread_created = false;
   h->loop_active = false;
-  // break the loop out of poll()-ing by sending a null byte
-  write(h->msg_fd, &msg, 1);
-  pthread_join(h->thread_id, NULL);
 }
+
 /*! \brief Initialize async event loop
  * \param h address of ``async_handle_t*`` handle
  * \return exit code
@@ -57,29 +57,5 @@ int async_loop_delete(async_handle_t **h)
 {
   free(*h);
   *h = NULL;
-  return 0;
-}
-
-int async_loop_add_fn(async_handle_t *h, async_args_t args)
-{
-  unsigned int fn_pos = h->n_fn;
-  unsigned int fd_pos = h->n_fds;
-
-  if(fd_pos == h->n_fds_alloc) {
-    h->async_fds = (struct pollfd*)realloc(h->async_fds, 2 * h->n_fds_alloc);
-    h->n_fds_alloc *= 2;
-  }
-
-  async_fd_map_t *map = h->map;
-  async_fd_map_insert(map, args.fd, args.fd_type, fn_pos);
-  (h->async_fds)[fd_pos].fd = args.fd;
-  (h->async_fds)[fd_pos].events = POLLIN;
-  h->n_fds += 1;
-  // TODO: add error code for trying to add a function when the loop is already full
-  (h->inputs)[fn_pos] = args.inputs;
-  (h->outputs)[fn_pos] = args.outputs;
-  (h->kwargs)[fn_pos] = args.kwargs;
-  (h->fn_ptrs)[fn_pos] = args.fn;
-  h->n_fn += 1;
   return 0;
 }
