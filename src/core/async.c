@@ -58,3 +58,11 @@ int async_loop_delete(async_handle_t **h)
   *h = NULL;
   return 0;
 }
+
+int async_loop_add_event(async_handle_t *h, hm_event_t *e) {
+  return 0;
+}
+
+int async_loop_remove_event(async_handle_t *h, unsigned int event_id) {
+  return 0;
+}
