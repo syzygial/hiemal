@@ -1,4 +1,5 @@
 #include "intern/common.h"
+#include "intern/async.h"
 #include "intern/io.h"
 #include "intern/buffer.h"
 
