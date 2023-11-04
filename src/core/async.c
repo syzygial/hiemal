@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "intern/async.h"
+#include "intern/thread.h"
 
 
 void *_async_loop(void *h) {
@@ -19,8 +20,7 @@ void async_loop_dispatch(async_handle_t *h)
 {
   if(!(h->loop_active)) {
     h->thread_created = true;
-    pthread_t *loop_thread = &(h->thread_id);
-    pthread_create(loop_thread, NULL, _async_loop, (void *)h);
+    HM_THREAD_CREATE(_async_loop, (void*)h)
     while(!(h->loop_active));
   }
 }
