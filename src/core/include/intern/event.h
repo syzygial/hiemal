@@ -1,6 +1,8 @@
 #ifndef _INTERN_EVENT_H
 #define _INTERN_EVENT_H
 
+#include "api/buffer.h"
+
 typedef struct _hm_event hm_event_t;
 typedef struct _hm_event_list hm_event_list_t;
 typedef struct _buffer_io_event buffer_io_event_t;
