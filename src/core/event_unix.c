@@ -28,8 +28,6 @@ int futex_wake(uint32_t *uaddr, uint32_t val) {
 }
 #endif
 
-#include "api/buffer.h"
-
 #include "intern/common.h"
 #include "intern/event.h"
 #include "intern/thread.h"
