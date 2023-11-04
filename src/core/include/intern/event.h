@@ -52,6 +52,7 @@ int hm_event_delete(hm_event_t **e);
 int hm_event_list_init(hm_event_list_t **l);
 int hm_event_reflist_init(hm_event_list_t **l);
 int hm_event_list_delete(hm_event_list_t **l);
+int hm_event_list_add(hm_event_list_t *l, hm_event_t *e);
 
 int hm_event_poll(hm_event_t *e);
 int hm_event_poll_list(hm_event_list_t *l);
