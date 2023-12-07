@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include "info.h"
+#include "intern/info.h"
 
 int main() {
-  printf("Hiemal version: %s\n", hm_version_str());
+  printf("hiemal version: %s\n", hm_version_str());
   return 0;
 }
