@@ -96,6 +96,7 @@ set_target_properties(hiemal PROPERTIES
   RESOURCE "${RESOURCE_FILES}")
 
 add_subdirectory(src/core)
+add_subdirectory(src/util)
 add_subdirectory(src/python)
 if(WITH_UTILS)
   add_subdirectory(src/utils)
