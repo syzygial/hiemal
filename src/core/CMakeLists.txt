@@ -6,18 +6,22 @@ target_sources(hiemal PRIVATE
   buffer.c 
   dsp.c 
   math.c 
+  async.c 
+  signal_chain.c 
   io.c
   info.c
   logging.c
   device.c
   backend.c
   common.c
+  switchboard.c
   thread.c)
 
 if(UNIX)
   target_sources(hiemal PRIVATE
     event_unix.c
     semaphore_unix.c
+    switchboard_unix.c
     thread_unix.c)
 endif()
 

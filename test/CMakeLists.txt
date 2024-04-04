@@ -3,8 +3,10 @@ SET(TEST_FILES
   test_dsp.c 
   test_math.c 
   test_io.c 
+  test_async.c
   test_common.c
   test_semaphore.c
+  test_switchboard.c
   test_thread.c
   test_event.c)
 
@@ -38,6 +40,7 @@ if(NOT WITH_PULSEAUDIO)
 endif()
 
 add_executable(run_tests EXCLUDE_FROM_ALL test_main.c common.c util/util.c ${TEST_FILES})
+target_sources(run_tests PRIVATE mock/mock_async.c)
 add_custom_command(OUTPUT test_main.c 
   DEPENDS test_main.c.in common.c util/gendriver.py ${TEST_FILES}
   COMMAND python3 util/gendriver.py --exclude_files ${GENDRIVER_EXCLUDED_FILES}
