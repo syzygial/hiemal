@@ -1,0 +1,8 @@
+#ifndef _HM_OPS_H
+#define _HM_OPS_H
+
+char **hm_op_list();
+
+%%OP_WRAPPER_DEFS%%
+
+#endif

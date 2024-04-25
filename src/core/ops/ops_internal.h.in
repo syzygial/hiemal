@@ -1,0 +1,8 @@
+#ifndef _HM_OPS_INTERNAL_H
+#define _HM_OPS_INTERNAL_H
+
+#include "ops.h"
+
+%%OP_KWARG_DEFS%%
+
+#endif
