@@ -6,7 +6,8 @@ SET(TEST_FILES
   test_common.c
   test_semaphore.c
   test_thread.c
-  test_event.c)
+  test_event.c
+  test_args.c)
 
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)
