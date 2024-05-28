@@ -6,7 +6,8 @@ typedef struct _arg hm_arg;
 enum arg_action {
   COLLECT=0,
   SET_TRUE,
-  SET_FALSE
+  SET_FALSE,
+  SEPARATE
 };
 
 struct _arg {

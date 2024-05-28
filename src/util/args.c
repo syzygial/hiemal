@@ -1,5 +1,6 @@
 #include "util/args.h"
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +44,18 @@ int args_clear(hm_arg *args) {
       }
     }
     args++;
+  }
+  return 0;
+}
+
+int _parse_arg_sig(char *sig, int range[2]) {
+  if (strcmp(sig, "*") == 0) {
+    range[0] = 1;
+    range[1] = INT_MAX;
+  }
+  else if (strcmp(sig, "+") == 0) {
+    range[0] = 2;
+    range[1] = INT_MAX;
   }
   return 0;
 }
