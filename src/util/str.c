@@ -14,7 +14,7 @@ bool is_int_str(char *s) {
 }
 
 bool is_int_range(char *s) {
-  char *_s = (char*)calloc(strlen(s), sizeof(char));
+  char *_s = (char*)calloc(strlen(s)+1, sizeof(char));
   strcpy(_s, s);
   // results of strchr & strrchr
   char *_s1 = strchr(_s, '-');
@@ -46,7 +46,7 @@ int parse_int_range(char *s, int range[2]) {
   if (!is_int_range(s)) {
     return -1;
   }
-  char *_s = (char*)calloc(strlen(s), sizeof(char));
+  char *_s = (char*)calloc(strlen(s)+1, sizeof(char));
   strcpy(_s, s);
   char *_s1 = strchr(_s, '-');
   *_s1 = '\0';
@@ -54,4 +54,15 @@ int parse_int_range(char *s, int range[2]) {
   range[1] = atoi(_s1+1);
   free(_s);
   return 0;
+}
+
+bool str_in_arr(char *s, char **arr) {
+  char **arr_itr = arr;
+  while (*arr_itr != NULL) {
+    if (strcmp(s, *arr_itr) == 0) {
+      return true;
+    }
+    arr_itr++;
+  }
+  return false;
 }

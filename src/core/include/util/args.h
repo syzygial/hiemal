@@ -1,6 +1,8 @@
 #ifndef _UTIL_ARGS_H
 #define _UTIL_ARGS_H
 
+#include <stdbool.h>
+
 typedef struct _arg hm_arg;
 
 enum arg_action {
@@ -19,10 +21,11 @@ struct _arg {
   void *result;
 };
 
-#define HM_ARG_DEFAULT (char*)0x1;
+#define HM_ARG_DEFAULT (char*)0x1
 
 int args_init(hm_arg *args);
 int args_clear(hm_arg *args);
 int parse_args(hm_arg *args, int argc, char **argv);
+int _parse_arg_sig(char *sig, int range[2]);
 
 #endif

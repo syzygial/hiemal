@@ -22,3 +22,11 @@ TEST(int_range) {
   ASSERT_TRUE((range[0] == 1) && (range[1] == 15))
   return TEST_SUCCESS;
 }
+
+TEST(str_in_arr) {
+  char **str_arr = (char*[]){"hello", "world", "abc", NULL};
+  ASSERT_TRUE(str_in_arr("world", str_arr))
+  ASSERT_TRUE(str_in_arr("abc", str_arr))
+  ASSERT_FALSE(str_in_arr("xyz", str_arr))
+  return TEST_SUCCESS;
+}
