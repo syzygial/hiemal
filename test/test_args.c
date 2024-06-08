@@ -60,6 +60,7 @@ TEST(parse_args) {
     ASSERT_TRUE(strcmp(((char**)(args[1].result))[0],"hello") == 0)
     ASSERT_TRUE(strcmp(((char**)(args[1].result))[1],"world") == 0)
     ASSERT_TRUE(((char**)(args[1].result))[2] == NULL)
+    ASSERT_TRUE(args_clear(args) == 0)
   }
 
   return TEST_SUCCESS;
