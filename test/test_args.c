@@ -28,8 +28,8 @@ TEST(parse_args) {
   // test 1
   {
     hm_arg args[] = {
-      {"test", 't', "+", COLLECT, NULL},
-      {NULL, 0, NULL, 0, NULL}
+      {"test", 't', "+", COLLECT, NULL, NULL},
+      {NULL, 0, NULL, 0, NULL, NULL}
     };
     ASSERT_TRUE(args_init(args) == 0)
     int argc = 3;
@@ -45,9 +45,9 @@ TEST(parse_args) {
   // test 2
   {
     hm_arg args[] = {
-      {HM_ARG_DEFAULT, '\0', "+", COLLECT, NULL},
-      {"test", 't', "2", COLLECT, NULL},
-      {NULL, 0, NULL, 0, NULL}
+      {HM_ARG_DEFAULT, '\0', "+", COLLECT, NULL, NULL},
+      {"test", 't', "2", COLLECT, NULL, NULL},
+      {NULL, 0, NULL, 0, NULL, NULL}
     };
     ASSERT_TRUE(args_init(args) == 0)
     int argc = 5;

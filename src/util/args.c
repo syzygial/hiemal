@@ -106,6 +106,7 @@ int _parse_arg_seq(hm_arg *arg, int argc, char **argv) {
       // instead of just looking at the first character to see if the
       // string starts with '-'
       if ((arg->name != HM_ARG_DEFAULT) && ((*argv)[0] == '-')) break;
+      if ((arg->arg_check != NULL) && ((arg->arg_check)(*argv) != 0)) break;
       n_found++; n_parsed++; argv++;
     }
     argv = _argv;

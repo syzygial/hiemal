@@ -5,6 +5,8 @@
 
 typedef struct _arg hm_arg;
 
+typedef int (arg_check_fn)(char *arg);
+
 enum arg_action {
   COLLECT=0,
   SET_TRUE,
@@ -19,6 +21,7 @@ struct _arg {
   //char **opts;
   enum arg_action action;
   void *result;
+  arg_check_fn *arg_check;
 };
 
 #define HM_ARG_DEFAULT (char*)0x1
