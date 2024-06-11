@@ -5,7 +5,7 @@
 
 typedef struct _arg hm_arg;
 
-typedef int (arg_check_fn)(char *arg);
+typedef int (arg_check_fn)(const char *arg);
 
 enum arg_action {
   COLLECT=0,

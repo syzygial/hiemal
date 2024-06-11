@@ -1,4 +1,5 @@
 #include "util/args.h"
+#include "util/file.h"
 #include "test_common.h"
 
 #include <limits.h>
@@ -61,6 +62,33 @@ TEST(parse_args) {
     ASSERT_TRUE(strcmp(((char**)(args[1].result))[1],"world") == 0)
     ASSERT_TRUE(((char**)(args[1].result))[2] == NULL)
     ASSERT_TRUE(args_clear(args) == 0)
+  }
+
+  // test 3
+  {
+    // setup
+    create_reg_file("file1.txt");
+
+    hm_arg args[] = {
+      {HM_ARG_DEFAULT, '\0', "+", COLLECT, NULL, NULL},
+      {"test", 't', "*", COLLECT, NULL, is_regular_file},
+      {NULL, 0, NULL, 0, NULL, NULL}
+    };
+    ASSERT_TRUE(args_init(args) == 0)
+    ASSERT_TRUE(args_clear(args) == 0)
+    int argc = 5;
+    char **argv = (char*[]){"--test", "file1.txt", "file2.txt", "123", "abc", NULL};
+    int rc = parse_args(args, argc, argv);
+    ASSERT_TRUE(rc == 0)
+    ASSERT_TRUE(strcmp(((char**)(args[0].result))[0],"file2.txt") == 0)
+    ASSERT_TRUE(strcmp(((char**)(args[0].result))[1],"123") == 0)
+    ASSERT_TRUE(strcmp(((char**)(args[0].result))[2],"abc") == 0)
+    ASSERT_TRUE(((char**)(args[0].result))[3] == NULL)
+    ASSERT_TRUE(strcmp(((char**)(args[1].result))[0],"file1.txt") == 0)
+    ASSERT_TRUE(((char**)(args[1].result))[1] == NULL)
+    
+    // teardown
+    delete_reg_file("file1.txt");
   }
 
   return TEST_SUCCESS;

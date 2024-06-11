@@ -2,43 +2,6 @@
 #include "test_common.h"
 
 #include <stdio.h>
-#include <errno.h>
-
-#ifdef __unix__
-#include <unistd.h>
-#include <sys/stat.h>
-
-int create_reg_file(const char *name) {
-  FILE *f = fopen(name, "a");
-  return fclose(f);
-}
-
-int delete_reg_file(const char *name) {
-  struct stat s;
-  if (stat(name, &s) != 0) {
-    return -1;
-  }
-  else if ((s.st_mode & S_IFMT) != S_IFREG) {
-    return -1;
-  }
-  return unlink(name);
-}
-
-int create_dir(const char *name) {
-  return mkdir(name, 0755);
-}
-
-int delete_dir(const char *name) {
-  struct stat s;
-  if (stat(name, &s) != 0) {
-    return -1;
-  }
-  else if ((s.st_mode & S_IFMT) != S_IFDIR) {
-    return -1;
-  }
-  return rmdir(name);
-}
-#endif
 
 TEST(is_regular_file) {
   const char *fname1 = "file1.txt";

@@ -23,3 +23,10 @@ int _assert_almost_equal_1d(void* a, void* b, unsigned int len, double tol);
 unsigned int get_log_level();
 int set_log_level(unsigned int lvl);
 #endif
+
+// file utils
+
+int create_reg_file(const char *name);
+int delete_reg_file(const char *name);
+int create_dir(const char *name);
+int delete_dir(const char *name);
