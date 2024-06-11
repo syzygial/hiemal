@@ -8,7 +8,8 @@ SET(TEST_FILES
   test_thread.c
   test_event.c
   test_args.c
-  test_str.c)
+  test_str.c
+  test_file.c)
 
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)

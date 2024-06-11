@@ -4,4 +4,5 @@ target_link_libraries(hiemal hmutil)
 target_sources(hmutil PRIVATE 
   tty.c
   args.c
-  str.c)
+  str.c
+  file.c)
