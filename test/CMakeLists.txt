@@ -40,10 +40,19 @@ if(NOT WITH_PULSEAUDIO)
   list(APPEND GENDRIVER_EXCLUDED_FILES test_pulse.c)
 endif()
 
+set(GENDRIVER_ARGS --exclude_files ${GENDRIVER_EXCLUDED_FILES})
+set(PYTEST_DIRS)
+if (PYTEST)
+  list(APPEND GENDRIVER_ARGS --pytest)
+  list(APPEND PYTEST_DIRS --pytest_dir
+      ${PROJECT_SOURCE_DIR}/test/python
+      ${PROJECT_SOURCE_DIR}/src/core/ops/util)
+endif()
+
 add_executable(run_tests EXCLUDE_FROM_ALL test_main.c common.c util/util.c ${TEST_FILES})
 add_custom_command(OUTPUT test_main.c 
   DEPENDS test_main.c.in common.c util/gendriver.py ${TEST_FILES}
-  COMMAND python3 util/gendriver.py --exclude_files ${GENDRIVER_EXCLUDED_FILES}
+  COMMAND python3 util/gendriver.py ${GENDRIVER_ARGS}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
   COMMENT "Generating test_main.c"
   POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy 
@@ -54,7 +63,12 @@ target_include_directories(run_tests PRIVATE include ${PROJECT_SOURCE_DIR}/src/c
 if(WITH_PROTOBUF)
   target_include_directories(run_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/protobuf/_c_wrap)
 endif()
-add_custom_target(test COMMAND test/run_tests 
+if(PYTEST)
+  target_include_directories(run_tests PRIVATE ${Python_INCLUDE_DIRS})
+  target_link_libraries(run_tests "python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
+endif()
+
+add_custom_target(test COMMAND test/run_tests ${PYTEST_DIRS}
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR} 
   DEPENDS run_tests
   COMMENT "Running tests")

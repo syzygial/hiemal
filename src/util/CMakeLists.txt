@@ -5,4 +5,5 @@ target_sources(hmutil PRIVATE
   tty.c
   args.c
   str.c
-  file.c)
+  file.c
+  unicode.c)

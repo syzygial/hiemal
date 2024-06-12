@@ -86,6 +86,7 @@ TEST(parse_args) {
     ASSERT_TRUE(((char**)(args[0].result))[3] == NULL)
     ASSERT_TRUE(strcmp(((char**)(args[1].result))[0],"file1.txt") == 0)
     ASSERT_TRUE(((char**)(args[1].result))[1] == NULL)
+    ASSERT_TRUE(args_clear(args) == 0)
     
     // teardown
     delete_reg_file("file1.txt");

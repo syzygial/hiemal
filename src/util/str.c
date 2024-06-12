@@ -66,3 +66,59 @@ bool str_in_arr(char *s, char **arr) {
   }
   return false;
 }
+
+int str_arr_len(char **s) {
+  if (s == NULL) {
+    return -1;
+  }
+  int len = 0;
+  while (*s != NULL) {
+    len++;
+    s++;
+  }
+  return len;
+}
+
+int str_arr_eq(char **arr1, char **arr2) {
+  int arr1_len = str_arr_len(arr1);
+  int arr2_len = str_arr_len(arr2);
+  if (arr1_len != arr2_len) {
+    return 0;
+  }
+  
+  int i = 0;
+  for (i = 0; i < arr1_len; i++) {
+    if (strcmp(arr1[i], arr2[i]) != 0) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int str_arr_copy(char **dest, char **src) {
+  int src_len = str_arr_len(src);
+  int str_len = 0;
+  int i = 0;
+
+  for (i = 0; i < src_len; i++) {
+    str_len = strlen(src[i]);
+    dest[i] = (char*)calloc(str_len+1, sizeof(char));
+    strcpy(dest[i], src[i]);
+  }
+  return 0;
+}
+
+int str_arr_copy_m(char ***dest, char **src) {
+  int src_len = str_arr_len(src);
+  *dest = (char**)calloc(src_len+1, sizeof(char*));
+  return str_arr_copy(*dest, src);
+}
+
+int str_arr_copy_clear(char **s) {
+  int str_len = str_arr_len(s);
+  int i = 0;
+  for (i = 0; i < str_len; i++) {
+    free(s[i]);
+  }
+  return 0;
+}

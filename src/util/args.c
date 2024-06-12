@@ -135,6 +135,7 @@ int _parse_arg_seq(hm_arg *arg, int argc, char **argv) {
 }
 
 int parse_args(hm_arg *args, int argc, char **argv) {
+  // TODO: handle argument errors gracefully
   hm_arg *_args = args;
   hm_arg *default_opt = NULL;
   int n_parsed = 0;

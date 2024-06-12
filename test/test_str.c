@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "util/str.h"
 #include "test_common.h"
 
@@ -28,5 +31,58 @@ TEST(str_in_arr) {
   ASSERT_TRUE(str_in_arr("world", str_arr))
   ASSERT_TRUE(str_in_arr("abc", str_arr))
   ASSERT_FALSE(str_in_arr("xyz", str_arr))
+  return TEST_SUCCESS;
+}
+
+TEST(str_arr_len) {
+  char **arr = (char*[]){"hello", "world", "abc", "123", NULL};
+  int arr_len = 4;
+  ASSERT_TRUE(str_arr_len(arr) == arr_len)
+  return TEST_SUCCESS;
+}
+
+TEST(str_arr_eq) {
+  char **arr1 = (char*[]){"hello", "world", "abc", "123", NULL};
+  char **arr2 = (char*[]){"hello", "world", "abc", "123", NULL};
+  char **arr3 = (char*[]){"hello", "world", "abc", "xyz", NULL};
+  ASSERT_TRUE(str_arr_eq(arr1, arr2) == 1)
+  ASSERT_TRUE(str_arr_eq(arr1, arr3) == 0)
+  return TEST_SUCCESS;
+}
+
+TEST(str_arr_copy) {
+  char **arr1 = (char*[]){"hello", "world", "abc", "123", NULL};
+  char **arr2 = (char*[]){NULL, NULL, NULL, NULL, NULL};
+  ASSERT_TRUE(str_arr_copy(arr2, arr1) == 0)
+  ASSERT_TRUE(str_arr_eq(arr1, arr2) == 1)
+  return TEST_SUCCESS;
+}
+
+TEST(str_arr_copy_clear) {
+  // setup
+  int arr_len = 2;
+  char *s1 = "hello";
+  char *s2 = "world";
+  char **arr = (char**)calloc(arr_len+1, sizeof(char*));
+  arr[0] = (char*)calloc(strlen(s1) + 1, sizeof(char));
+  arr[1] = (char*)calloc(strlen(s2) + 1, sizeof(char));
+  strcpy(arr[0], s1);
+  strcpy(arr[1], s2);
+
+  ASSERT_TRUE(str_arr_copy_clear(arr) == 0)
+
+  // teardown
+  free(arr);
+  return TEST_SUCCESS;
+}
+
+TEST(str_arr_copy_m) {
+  char **arr1 = (char*[]){"hello", "world", "abc", "123", NULL};
+  char **arr2 = NULL;
+  ASSERT_TRUE(str_arr_copy_m(&arr2, arr1) == 0)
+  ASSERT_TRUE(arr2 != NULL)
+  ASSERT_TRUE(str_arr_eq(arr1, arr2) == 1)
+  ASSERT_TRUE(str_arr_copy_clear(arr2) == 0)
+  free(arr2);
   return TEST_SUCCESS;
 }

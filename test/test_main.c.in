@@ -1,3 +1,11 @@
+#include "cmake_info.h"
+
+#ifdef PYTEST
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+#include <string.h>
+#endif
+
 #include <stdlib.h>
 #include <time.h>
 
@@ -7,9 +15,40 @@
 
 #include "test_common.h"
 #include "util.h"
-#include "cmake_info.h"
+#include "util/args.h"
+#include "util/file.h"
+#include "util/str.h"
 
 %%TEST_DECLARATIONS%%
+
+#ifdef PYTEST
+int py_setup(char **pytest_dirs) {
+  PyConfig config;
+  PyConfig_InitIsolatedConfig(&config);
+  config.write_bytecode = 0; // do not create .pyc files for imported modules
+
+  Py_InitializeFromConfig(&config);
+  PyConfig_Clear(&config);
+
+  if (pytest_dirs != NULL) {
+    PyObject *sys_path = PySys_GetObject("path");
+    PyObject *pytest_dir_py = NULL;
+    int n_dirs = str_arr_len(pytest_dirs);
+    int i = 0;
+    for (i = 0; i < n_dirs; i++) {
+      PyObject *pytest_dir_py = PyUnicode_FromString(pytest_dirs[i]);
+      PyList_Append(sys_path, pytest_dir_py);
+      Py_DECREF(pytest_dir_py);
+    }
+  }
+  return 0;
+}
+
+int py_teardown() {
+  Py_FinalizeEx();
+  return 0;
+}
+#endif
 
 char *test_msg(int result) {
   switch (result) {
@@ -27,21 +66,56 @@ int main(int argc, char **argv) {
   if (getenv("MALLOC_TRACE") == NULL) setenv("MALLOC_TRACE", "test_trace.txt", 0);
   mtrace();
   #endif
+
+  hm_arg args[] = {
+    {HM_ARG_DEFAULT, '\0', "+", COLLECT, NULL, NULL},
+    #ifdef PYTEST
+    {"pytest_dir", '\0', "+", COLLECT, NULL, is_dir},
+    #endif
+    {NULL, 0, NULL, 0, NULL, NULL}
+  };
+  args_init(args);
+  parse_args(args, argc-1, argv+1);
+  char *test_range = NULL;
+  if (args[0].result != NULL) {
+    test_range = (char*)calloc(strlen(*((char**)(args[0].result))), sizeof(char));
+    strcpy(test_range, *((char**)(args[0].result)));
+  }
+  #ifdef PYTEST
+  char **pytest_dirs = NULL;
+  if (args[1].result != NULL) {
+    str_arr_copy_m(&pytest_dirs, (char**)(args[1].result));
+    py_setup(pytest_dirs);
+    str_arr_copy_clear(pytest_dirs);
+    free(pytest_dirs);
+  }
+  else {
+    py_setup(NULL);
+  }
+  #endif
+  args_clear(args);
+
   testing_results_t results;
   results.n_tests = %%N_TESTS%%;
   results.tests = (test_info_t*)malloc(results.n_tests*sizeof(test_info_t));
   int (*test_list[])() = %%TEST_LIST%%;
-  char *test_names[] = %%TEST_NAMES%%;
+  const char *test_names[] = %%TEST_NAMES%%;
   int i, rc;
   unsigned int n_success = 0;
   unsigned int n_skipped = 0;
   time_t start_time, end_time;
-  if (argc == 2) {
-    parse_test_list(&results, argv[1]);
+  parse_test_list(&results, test_range);
+  if (test_range != NULL) {
+    free(test_range);
   }
-  else {
-    parse_test_list(&results, NULL);
-  }
+  #ifdef PYTEST
+  PyObject *py_test_driver = PyImport_ImportModule("py_tests");
+  PyObject *run_py_test = PyObject_GetAttrString(py_test_driver, "run_test");
+  PyObject *test_str = NULL;
+  PyObject *res = NULL;
+  Py_DECREF(py_test_driver);
+  #endif
+
   printf("Running %d tests\n", results.n_tests);
   for (i = 0; i < results.n_tests; i++) {
     test_info_t *current_test = &(results.tests[i]);
@@ -50,13 +124,29 @@ int main(int argc, char **argv) {
     
     start_time = time(NULL);
     if (current_test->run_test) {
+      #ifdef PYTEST
+      if (strncmp(test_names[i], "py:", 3) == 0) {
+        test_str = PyUnicode_FromString(test_names[i]);
+        if((res = PyObject_CallOneArg(run_py_test, test_str)) == NULL) {
+          fprintf(stderr, "Bad return value from python test call\n");
+          exit(1);
+        }
+        rc = (res == Py_True) ? TEST_SUCCESS : TEST_FAILURE;
+        Py_DECREF(test_str);
+        Py_DECREF(res);
+      }
+      else {
+        rc = (*test_list[i])();
+      }
+      #else
       rc = (*test_list[i])();
+      #endif
     }
     else {
       rc = TEST_SKIPPED;
     }
     end_time = time(NULL);
-    current_test->test_name = test_names[i];
+    current_test->test_name = (char*)test_names[i];
     current_test->result = rc;
     if (rc == TEST_SUCCESS) {
       n_success++;
@@ -73,5 +163,11 @@ int main(int argc, char **argv) {
   printf("%d/%d tests passed (%d skipped)\n", n_success, results.n_tests - n_skipped, n_skipped);
   print_results_json("test_results.json", &results);
   free(results.tests);
+
+  #ifdef PYTEST
+  Py_DECREF(run_py_test);
+  py_teardown();
+  #endif
+
   return (n_success == results.n_tests - n_skipped) ? 0 : 1;
 }

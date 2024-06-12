@@ -23,12 +23,16 @@ def discover_tests(file_glob="test*.c", exclude_files=[], \
     test_names += [s.split('(')[1].split(')')[0] for s in new_matches]
   return test_names
 
+def discover_py_tests(py_glob="python/test*.py", exclude_files=[]):
+  test_file_list = [f.replace('python/', '') for f in list(set(glob.glob(py_glob)) - set(exclude_files))]
+  return ["py:" + test.split(".py")[0] for test in test_file_list]
+
 def gen_test_driver(tests, in_file="test_main.c.in", out_file=None):
   if out_file == None:
     out_file = in_file.split(".in")[0]
-  test_declarations = "\n".join(["TEST(" + t + ");" for t in tests])
+  test_declarations = "\n".join(["TEST(" + t + ");" for t in tests if not t.startswith("py:")])
   n_tests = str(len(tests))
-  test_list = "{" + ', '.join(["test_" + t for t in tests]) + "}"
+  test_list = "{" + ', '.join(["test_" + t if not t.startswith("py:") else "NULL" for t in tests]) + "}"
   test_names = "{" + ', '.join(['"' + t + '"' for t in tests]) + "}"
   driver_file_buf = io.StringIO()
   driver_file_buf.write("// This file was generated ")
@@ -47,10 +51,13 @@ def gen_test_driver(tests, in_file="test_main.c.in", out_file=None):
   with open(out_file, "w") as f:
     f.write(driver_file_buf.read())
 
-# TODO: command-line arguments
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(sys.argv[1:])
   parser.add_argument('--exclude_files', nargs='*', default=list())
+  parser.add_argument('--pytest', action='store_true')
   parsed_args = parser.parse_args()
   test_list = discover_tests(exclude_files=parsed_args.exclude_files)
+  if (parsed_args.pytest):
+    py_test_list = discover_py_tests()
+    test_list.extend(py_test_list)
   gen_test_driver(test_list)
