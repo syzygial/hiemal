@@ -7,8 +7,15 @@ def file_ops(file_str, op_str):
   #TODO: improve backslash handling, make sure "name" is a valid function name
   char_re = r"'[\w]'"
   str_re = r'"([\w\s\(\)\[\]\{\}:;-]|(?:\\' + '["nrt]' + r'))*?"'
-  info_comment_re = r"//[ ]*\[[ ]*(?P<params>(?:[ ]*[a-zA-Z_](?:\w*[ ]*)*:[ ]*(?:\w+[ ]*)+\**,?)+)[ ]*\][ ]*\n[ \n]*" \
-    + op_str + r"\s*\(\s*(?P<name>\w+)\s*\)"
+  info_comment_re = (r"//[ ]*"
+    r"\[[ ]*"
+    r"(?P<params>"
+    r"(?:[ ]*[a-zA-Z_](?:\w*[ ]*)*" # param name
+    r":"
+    r"[ ]*(?:\w+[ ]*)+\**,?)" # param type
+    r"+)"
+    r"[ ]*\][ ]*\n[ \n]*"
+    + op_str + r"\s*\(\s*(?P<name>\w+)\s*\)")
   composite_re = "|".join((char_re,str_re,info_comment_re))
   params_re = r"(?P<name>\w+):(?P<type>\w+)"
   file_tokens = re.finditer(composite_re, file_str, re.M)
