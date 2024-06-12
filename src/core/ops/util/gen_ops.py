@@ -11,13 +11,15 @@ def file_ops(file_str, op_str):
     r"\[[ ]*"
     r"(?P<params>"
     r"(?:[ ]*[a-zA-Z_](?:\w*[ ]*)*" # param name
-    r":"
-    r"[ ]*(?:\w+[ ]*)+\**,?)" # param type
-    r"+)"
+    r":[ ]*"
+    r"(?:\w+[ ]*)+\**[ ]*,?)" # param type
+    r"+)" # end params
     r"[ ]*\][ ]*\n[ \n]*"
     + op_str + r"\s*\(\s*(?P<name>\w+)\s*\)")
   composite_re = "|".join((char_re,str_re,info_comment_re))
-  params_re = r"(?P<name>\w+):(?P<type>\w+)"
+  params_re = (r"[ ]*(?P<name>[a-zA-Z_](?:[ ]*\w+)*)"
+               r"[ ]*:[ ]*"
+               r"(?P<type>(?:\w+[ ]*)+\**)")
   file_tokens = re.finditer(composite_re, file_str, re.M)
   ops = list()
   for m in file_tokens:
@@ -25,8 +27,17 @@ def file_ops(file_str, op_str):
       continue
     if ('params' not in m.groupdict().keys()) or ('name' not in m.groupdict().keys()):
       raise IndexError("Bad match: {}".format(m.string))
-    param_tokens = re.finditer(params_re, m['params'].replace(' ', ''))
+    param_tokens = re.finditer(params_re, m['params'])
     params_list = [x['type'] + ' ' + x['name'] for x in param_tokens]
+
+    # clean up extra spaces
+    for i, p in enumerate(params_list):
+      while p.count(' '*2) > 0:
+        p = p.replace(' '*2, ' ')
+      while p.count(' *') > 0:
+        p = p.replace(' *', '*')
+      params_list[i] = p.strip()
+
     ops.append((m['name'], params_list))
   return ops
 
