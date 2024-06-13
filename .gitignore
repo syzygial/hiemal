@@ -2,7 +2,7 @@
 **/*.swp
 build/**
 **/tmp
-src/**/__*
+src/**/_tmp-*
 docs/latex
 docs/_build
 docs/xml
