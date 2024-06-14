@@ -9,7 +9,8 @@ SET(TEST_FILES
   test_event.c
   test_args.c
   test_str.c
-  test_file.c)
+  test_file.c
+  test_op_filter.c)
 
 if(WITH_PROTOBUF)
   list(APPEND TEST_FILES test_pb_c_wrap.c)
@@ -67,6 +68,7 @@ if(PYTEST)
   target_include_directories(run_tests PRIVATE ${Python_INCLUDE_DIRS})
   target_link_libraries(run_tests "python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
 endif()
+target_include_directories(run_tests PRIVATE ${CMAKE_BINARY_DIR}/src/core/ops)
 
 add_custom_target(test COMMAND test/run_tests ${PYTEST_DIRS}
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR} 

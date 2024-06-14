@@ -3,6 +3,12 @@
 
 #include "ops.h"
 
+#define DSP_OP(name, src_type, dest_type) int name ##_impl(src_type src, dest_type dest, unsigned int n_bytes, name ##_kwargs_t *kwargs)
+
 %%OP_KWARG_DEFS%%
+
+%%OP_KWARG_MACRO_DEFS%%
+
+%%OP_IMPL_DEFS%%
 
 #endif

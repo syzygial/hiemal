@@ -1,9 +1,11 @@
+#include <stddef.h>
+
 #include "ops_internal.h"
 
 static const char* ops_list[%%N_OPS%%] = %%OP_LIST%%
 
 %%OP_WRAPPER_DECLS%%
 
-char **hm_op_list() {
+const char **hm_op_list() {
   return ops_list;
 }

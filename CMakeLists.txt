@@ -25,10 +25,24 @@ else()
 set(HIEMAL_VERSION_STR "${HIEMAL_VERSION_MAJOR}.${HIEMAL_VERSION_MINOR}.${HIEMAL_VERSION_PATCH}")
 endif()
 
+
+# command for running ops codegen script
+set(OP_FILES src/core/ops/dsp/filter.c)
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/core/ops/ops.h
+  ${CMAKE_BINARY_DIR}/src/core/ops/ops_internal.h
+  ${CMAKE_BINARY_DIR}/src/core/ops/ops.c
+  DEPENDS src/core/ops/util/gen_ops.py
+    src/core/ops/ops.c.in
+    src/core/ops/ops.h.in
+    src/core/ops/ops_internal.h.in ${OP_FILES}
+  COMMAND python3 util/gen_ops.py -o ${CMAKE_BINARY_DIR}/src/core/ops
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/core/ops
+  COMMENT "generating ops")
+
 add_library(hiemal SHARED)
 target_include_directories(hiemal PRIVATE ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(hiemal m)
-
+target_sources(hiemal PRIVATE ${OP_FILES})
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(WITH_ALSA "OFF" CACHE BOOL "Use ALSA")  
   find_package(ALSA)

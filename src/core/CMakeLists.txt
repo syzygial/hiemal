@@ -14,6 +14,8 @@ target_sources(hiemal PRIVATE
   common.c
   thread.c)
 
+add_subdirectory(ops)
+
 if(UNIX)
   target_sources(hiemal PRIVATE
     event_unix.c
