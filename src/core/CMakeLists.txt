@@ -40,6 +40,7 @@ set(HIEMAL_PUBLIC_INCLUDE
   "include/api/backend.h"
   "include/api/buffer.h"
   "include/api/device.h"
+  "include/api/logging.h"
   "include/api/recording.h")
 
 set_target_properties(hiemal PROPERTIES PUBLIC_HEADER "${HIEMAL_PUBLIC_INCLUDE}")

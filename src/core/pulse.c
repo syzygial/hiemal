@@ -1,5 +1,6 @@
 #include "intern/common.h"
 #include "intern/buffer.h"
+#include "intern/logging.h"
 #include "intern/pulse.h"
 
 #include <stdio.h>
@@ -118,6 +119,7 @@ void _hm_pulse_card_list_cb (pa_context *c, const pa_card_info *i, int eol, void
 }
 
 int _hm_pulse_io_write(pa_stream *s, pa_threaded_mainloop *m, buffer_t *buf, unsigned int n_bytes) {
+  char* log_str = NULL;
   pa_threaded_mainloop_lock(m);
   void *pa_buf = malloc(n_bytes);
   void *pa_buf_itr = pa_buf;
@@ -127,6 +129,12 @@ int _hm_pulse_io_write(pa_stream *s, pa_threaded_mainloop *m, buffer_t *buf, uns
     pa_threaded_mainloop_wait(m);
     size_t writable_bytes = pa_stream_writable_size(s);
     if (writable_bytes > n_bytes) writable_bytes = n_bytes;
+
+    xasprintf(&log_str, "Writing %lu bytes", writable_bytes);
+    hm_log_debug(log_str, __func__);
+    free(log_str);
+    log_str = NULL;
+
     pa_stream_write(s, pa_buf_itr, writable_bytes, NULL, 0, PA_SEEK_RELATIVE);
     n_bytes -= writable_bytes;
     pa_buf_itr += writable_bytes;
@@ -154,6 +162,7 @@ int hm_pulse_io_write(hm_device_io_t *io, buffer_t *buf, unsigned int n_bytes) {
 }
 
 int _hm_pulse_io_read(pa_stream *s, pa_threaded_mainloop *m, buffer_t *buf, unsigned int n_bytes) {
+  char* log_str = NULL;
   pa_threaded_mainloop_lock(m);
   int buf_size = buffer_n_write_bytes(buf);
   if (buf_size < n_bytes) n_bytes = buf_size;
@@ -163,6 +172,12 @@ int _hm_pulse_io_read(pa_stream *s, pa_threaded_mainloop *m, buffer_t *buf, unsi
     pa_threaded_mainloop_wait(m);
     pa_stream_peek(s, &pa_buf, &n_bytes_read);
     if (n_bytes_read > n_bytes) n_bytes_read = n_bytes;
+
+    xasprintf(&log_str, "Reading %lu bytes", n_bytes_read);
+    hm_log_debug(log_str, __func__);
+    free(log_str);
+    log_str = NULL;
+
     buffer_write(buf, pa_buf, n_bytes_read);
     n_bytes -= n_bytes_read;
     pa_buf = NULL;
