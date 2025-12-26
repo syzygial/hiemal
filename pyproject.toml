@@ -1,8 +1,14 @@
 [build-system]
-build-backend = "py_build:build"
+build-backend = "py_build"
 backend-path = ["tools"]
 
 [project]
 name = "hiemal"
 version = "0.1.0"
 readme = "README.md"
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Topic :: Multimedia :: Sound/Audio",
+]
+license = "MIT"
+license-files = ['LICENSE']
