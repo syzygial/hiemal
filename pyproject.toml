@@ -1,0 +1,8 @@
+[build-system]
+build-backend = "py_build:build"
+backend-path = ["tools"]
+
+[project]
+name = "hiemal"
+version = "0.1.0"
+readme = "README.md"
