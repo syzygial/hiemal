@@ -198,6 +198,7 @@ def gen_op_wrappers(ops_file, dry_run, out_dir):
 #ifndef HIEMAL_OPS_H
 #define HIEMAL_OPS_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef enum {

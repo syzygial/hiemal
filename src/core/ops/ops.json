@@ -12,8 +12,8 @@
     },
     {
       "name": "sine",
-      "params": {"fs": "int"},
-      "state": {"phase": "float", "start_time": "hm_time_ms_t"}
+      "params": {"fs": "int", "realtime": "bool"},
+      "state": {"phase": "float", "start_time": "hm_time_us_t"}
     }
   ],
   "sink": [

@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "ops_internal.h"
 
 SOURCE_OP_INIT_FN(sine) {
@@ -14,7 +16,9 @@ SOURCE_OP_FINI_FN(sine) {
 SOURCE_OP(sine) {
   __SOURCE_SINE_ARGS_UNPACK(kwargs)
   __SOURCE_SINE_STATE_UNPACK(state)
-  return 0;  
+  double t_us = elapsed_time_us(&state_start_time);
+  double dt_us = 1e6 / fs;
+  return 0;
 }
 
 SOURCE_BYTES_READABLE_FN(sine) {
