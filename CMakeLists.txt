@@ -30,6 +30,7 @@ endif()
 set(OP_FILES src/core/ops/dsp/filter.c
   src/core/ops/source/io_device.c
   src/core/ops/source/file.c
+  src/core/ops/source/sine.c
   src/core/ops/sink/io_device.c
   src/core/ops/sink/file.c
   )

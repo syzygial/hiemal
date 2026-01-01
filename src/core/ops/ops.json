@@ -9,6 +9,11 @@
       "name": "file",
       "params": {"filename": "const char*"},
       "state": {"fp": "FILE*"}
+    },
+    {
+      "name": "sine",
+      "params": {"fs": "int"},
+      "state": {"phase": "float", "start_time": "hm_time_ms_t"}
     }
   ],
   "sink": [

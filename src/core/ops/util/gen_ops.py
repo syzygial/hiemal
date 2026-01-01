@@ -239,6 +239,8 @@ int hm_op_sink_bytes_writable(hm_sink_op* sink_op, size_t *bytes_writable);
 
 #include "api/backend.h"
 #include "api/device.h"
+#include "util/time.h"
+
 #include "ops.h"
 
 #define SOURCE_OP(name) int name ##_source_impl(void* dest, unsigned int n_bytes, void *kwargs, void *state)
