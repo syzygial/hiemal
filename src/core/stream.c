@@ -3,6 +3,7 @@
 
 #include "ops_internal.h"
 #include "util/time.h"
+#include "intern/format.h"
 
 #include "api/stream.h"
 
