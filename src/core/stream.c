@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "ops_internal.h"
@@ -63,9 +64,21 @@ int hm_stream_run(hm_stream *stream, unsigned int msec) {
     
     if (dsp == NULL) {
       void *buf = calloc(bytes_available, 1);
+      void *tmp_buf = calloc(bytes_available, 1);
       hm_source_op_run(src, buf, bytes_available);
+      if (src->output_type != dest->input_type) {
+        size_t converted_bytes = hm_format_convert_bytes_available(src->output_type, dest->input_type, bytes_available);
+        if (converted_bytes > bytes_available) {
+          tmp_buf = realloc(tmp_buf, converted_bytes);
+          buf = realloc(buf, converted_bytes);
+        }
+        hm_format_convert(buf, src->output_type, tmp_buf, dest->input_type, bytes_available);
+        memcpy(buf, tmp_buf, converted_bytes);
+        bytes_available = converted_bytes;
+      }
       hm_sink_op_run(dest, buf, bytes_available);
       free(buf);
+      free(tmp_buf);
     }
     else {
       void *src_buf = calloc(bytes_available, 1);
