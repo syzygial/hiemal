@@ -44,6 +44,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/core/ops/ops.h
   COMMENT "generating ops")
 
 add_library(hiemal SHARED)
+set(hiemal_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/src/core/include)
 target_include_directories(hiemal PRIVATE ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(hiemal m)
 target_sources(hiemal PRIVATE ${OP_FILES})
@@ -122,7 +123,9 @@ set_target_properties(hiemal PROPERTIES
 
 add_subdirectory(src/core)
 add_subdirectory(src/util)
-#add_subdirectory(src/python)
+if(WITH_PYTHON)
+add_subdirectory(src/python)
+endif()
 if(WITH_UTILS)
   add_subdirectory(src/utils)
 endif()

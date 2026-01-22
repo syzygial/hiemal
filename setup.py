@@ -95,7 +95,8 @@ def main():
     libraries=["hiemal"], \
     library_dirs=[cmake.install_dir + "/lib"], \
     include_dirs=[cmake.install_dir + "/include",
-      "src/core/include"],
+      "src/core/include",
+      cmake.build_dir + "/include"],
     runtime_library_dirs=["$ORIGIN/../lib"],
     extra_compile_args=["-g"])
 
