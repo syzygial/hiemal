@@ -5,7 +5,7 @@
 
 struct PyHmSignatureObject {
   PyObject_HEAD
-}
+};
 
 static struct PyMemberDef hm_format_Signature_members[] = {
   {NULL}
@@ -19,7 +19,7 @@ static PyType_Spec hm_format_Signature_spec = {
   .name = "hm._c.format.Signature",
   .slots = hm_format_Signature_slots,
   .flags = Py_TPFLAGS_BASETYPE,
-  .basicsize ==sszeof(struct PyHmSignatureObject)
+  .basicsize = sizeof(struct PyHmSignatureObject)
 };
 
 // module
