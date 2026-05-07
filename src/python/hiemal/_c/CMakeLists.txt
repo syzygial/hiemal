@@ -1,4 +1,3 @@
-add_library(hm_python_wrapper MODULE)
 set_target_properties(hm_python_wrapper PROPERTIES PREFIX "")
 set_target_properties(hm_python_wrapper PROPERTIES OUTPUT_NAME "_c")
 target_include_directories(hm_python_wrapper PRIVATE

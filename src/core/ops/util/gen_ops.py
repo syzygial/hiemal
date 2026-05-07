@@ -146,6 +146,7 @@ hm_dsp_op* hm_dsp_{0}_op(hm_format_signature input_type, hm_format_signature out
     kwargs_typedef = 'typedef struct {{}} {}_{}_kwargs_t;'.format(op["name"], op_type)
     kwargs_macro_def = ''
     op_wrapper_kwargs_fill = ''
+    op_kwargs_macro_def = ''
   
   if "state" in op.keys() and op["state"]:
     op_state_list = '; '.join(
@@ -185,6 +186,16 @@ hm_dsp_op* hm_dsp_{0}_op(hm_format_signature input_type, hm_format_signature out
 
   return op_wrapper
 
+def gen_py_wrapper(op_type, op):
+  pyop_wrapper = {}
+  pyop_function_name = "hm_pywrap_{}_{}".format(op["name"], op_type)
+  pyop_function = "PyObject* {} (PyObject*, PyObject*) {{return Py_None;}}".format(pyop_function_name)
+  pyop_method = '{{"{}", {}, METH_VARARGS, NULL}}'.format(op["name"], pyop_function_name)
+  
+  pyop_wrapper["pyop_function"] = pyop_function
+  pyop_wrapper["pyop_method"] = pyop_method
+  return pyop_wrapper
+
 def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
   if isinstance(out_dir, list):
     out_dir = out_dir[0]
@@ -205,6 +216,9 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
   op_struct_wrapper_def_dict = {"source": [], "sink": [], "dsp": []}
   impl_decl_dict = {"source": [], "sink": [], "dsp": []}
 
+  pyop_function_dict = {"source": [], "sink": [], "dsp": []}
+  pyop_method_dict = {"source": [], "sink": [], "dsp": []}
+
   op_name_list_str = "static const char* ops_list[{}] = {{\n".format(len(ops["source"]) + len(ops["sink"]) + len(ops["dsp"]) + 3)
   for op_type, op_list in ops.items():
     for op in op_list:
@@ -220,11 +234,19 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
       op_struct_wrapper_decl_dict[op_type].append(op_wrapper["op_struct_wrapper_decl"])
       op_struct_wrapper_def_dict[op_type].append(op_wrapper["op_struct_wrapper_def"])
       impl_decl_dict[op_type].append(op_wrapper["impl_decl"])
+
+      pyop_wrapper = {}
+      if gen_py_ops:
+        pyop_wrapper = gen_py_wrapper(op_type, op)
+        pyop_function_dict[op_type].append(pyop_wrapper["pyop_function"])
+        pyop_method_dict[op_type].append(pyop_wrapper["pyop_method"])
     op_name_list_str += "  NULL,\n"
+    pyop_method_dict[op_type].append("{NULL}")
   op_name_list_str += "};"
 
   # ops.h
   ops_h_file = io.StringIO("// This file was generated automatically with util/gen_ops.py\n\n")
+  ops_h_file.seek(0, os.SEEK_END)
   with open(template_dir + "/ops.h.in", "r") as f:
     ops_h_str = f.read()\
                   .replace("%%SOURCE_OP_DECL%%", "\n".join(op_wrapper_decl_dict["source"]))\
@@ -234,10 +256,10 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
                   .replace("%%DSP_OP_DECL%%", "\n".join(op_wrapper_decl_dict["dsp"]))\
                   .replace("%%DSP_OP_DECL_STRUCT%%", "\n".join(op_struct_wrapper_decl_dict["dsp"]))
     ops_h_file.write(ops_h_str)
-  ops_h_file.seek(0, os.SEEK_END)
 
   # ops_internal.h
   ops_internal_h_file = io.StringIO("// This file was generated automatically with util/gen_ops.py\n\n")
+  ops_internal_h_file.seek(0, os.SEEK_END)
   with open(template_dir + "/ops_internal.h.in", "r") as f:
     ops_internal_h_str = f.read()\
                   .replace("%%SOURCE_KWARGS_TYPEDEF%%", "\n".join(kwargs_typedef_dict["source"]))\
@@ -256,10 +278,10 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
                   .replace("%%DSP_OP_STATE_MACRO_DEF%%", "\n".join(op_state_macro_def_dict["dsp"]))\
                   .replace("%%DSP_IMPL_DECL%%", "\n".join(impl_decl_dict["dsp"]))
     ops_internal_h_file.write(ops_internal_h_str)
-  ops_internal_h_file.seek(0, os.SEEK_END)
 
   #ops.c
   ops_c_file = io.StringIO("// This file was generated automatically with util/gen_ops.py\n\n")
+  ops_c_file.seek(0, os.SEEK_END)
   with open(template_dir + "/ops.c.in", "r") as f:
     ops_c_str = f.read()\
                   .replace("%%SOURCE_OP_WRAPPER_DEF%%", "\n\n".join(op_wrapper_def_dict["source"]))\
@@ -272,17 +294,30 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
                   .replace("%%SINK_LIST_START%%", str(len(ops["source"])+1))\
                   .replace("%%DSP_LIST_START%%", str(len(ops["source"]) + len(ops["sink"]) + 2))                  
     ops_c_file.write(ops_c_str)
-  ops_c_file.seek(0, os.SEEK_END)
 
   if gen_py_ops:
     # ops_python.h
     # ops_python.c
-    pass
+    ops_python_c_file = io.StringIO("// This file was generated automatically with util/gen_ops.py\n\n")
+    ops_python_c_file.seek(0, os.SEEK_END)
+    with open(template_dir + '/ops_python.c.in', "r") as f:
+      ops_python_c_str = f.read()\
+        .replace("%%SOURCE_PYOP_WRAPPERS%%", "\n\n".join(pyop_function_dict["source"]))\
+        .replace("%%SOURCE_PYOP_METHODS%%", ",\n  ".join(pyop_method_dict["source"]))\
+        .replace("%%SINK_PYOP_WRAPPERS%%", "\n\n".join(pyop_function_dict["sink"]))\
+        .replace("%%SINK_PYOP_METHODS%%", ",\n  ".join(pyop_method_dict["sink"]))\
+        .replace("%%DSP_PYOP_WRAPPERS%%", "\n\n".join(pyop_function_dict["dsp"]))\
+        .replace("%%DSP_PYOP_METHODS%%", ",\n  ".join(pyop_method_dict["dsp"]))
+      ops_python_c_file.write(ops_python_c_str)
+  else:
+    ops_python_c_file = io.StringIO()
 
 
   ops_h_file.seek(0)
   ops_internal_h_file.seek(0)
   ops_c_file.seek(0)
+  if gen_py_ops:
+    ops_python_c_file.seek(0)
 
   if dry_run:
     sys.stdout.write("--- ops.h ---\n")
@@ -291,6 +326,9 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
     sys.stdout.write(ops_internal_h_file.read())
     sys.stdout.write("\n--- ops.c ---\n")
     sys.stdout.write(ops_c_file.read())
+    if gen_py_ops:
+      sys.stdout.write("\n--- ops_python.c ---\n")
+      sys.stdout.write(ops_python_c_file.read())
   elif out_dir is None:
     raise ValueError("no out_dir specified")
   else:
@@ -299,7 +337,10 @@ def gen_op_wrappers(ops_file, dry_run, out_dir, template_dir, gen_py_ops):
     with open(out_dir + "ops_internal.h", 'w') as f:
       f.write(ops_internal_h_file.read())
     with open(out_dir + "ops.c", 'w') as f:
-      f.write(ops_c_file.read())          
+      f.write(ops_c_file.read())
+    if gen_py_ops:
+      with open(out_dir + "ops_python.c", 'w') as f:
+        f.write(ops_python_c_file.read())
 
 if __name__ == "__main__":
   import argparse

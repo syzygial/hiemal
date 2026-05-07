@@ -1,12 +1,78 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-static PyModuleDef hm_ops_module_def = {
-  .m_base = PyModuleDef_HEAD_INIT,
-  .m_name = "hiemal.ops"
+// ops.source
+
+%%SOURCE_PYOP_WRAPPERS%%
+
+static PyMethodDef hm_ops_source_module_methods[] = {
+  %%SOURCE_PYOP_METHODS%%
 };
 
-PyMODINIT_FUNC PyInit_hiemal_ops() {
-  PyObject *m = PyModule_Create(&hm_ops_module_def);
-  return m;
+static PyModuleDef hm_ops_source_module_def = {
+  .m_base = PyModuleDef_HEAD_INIT,
+  .m_name = "hiemal._c.ops.source",
+  .m_methods = hm_ops_source_module_methods
+};
+
+static int init_source_ops(PyObject *m) {
+  PyObject *source_module = PyModule_Create(&hm_ops_source_module_def);
+  PyModule_AddObject(m, "source", source_module);
+  return 0;
+}
+
+// ops.sink
+
+%%SINK_PYOP_WRAPPERS%%
+
+static PyMethodDef hm_ops_sink_module_methods[] = {
+  %%SINK_PYOP_METHODS%%
+};
+
+static PyModuleDef hm_ops_sink_module_def = {
+  .m_base = PyModuleDef_HEAD_INIT,
+  .m_name = "hiemal._c.ops.sink",
+  .m_methods = hm_ops_sink_module_methods
+};
+
+static int init_sink_ops(PyObject *m) {
+  PyObject *sink_module = PyModule_Create(&hm_ops_sink_module_def);
+  PyModule_AddObject(m, "sink", sink_module);
+  return 0;
+}
+
+// ops.dsp
+
+%%DSP_PYOP_WRAPPERS%%
+
+static PyMethodDef hm_ops_dsp_module_methods[] = {
+  %%DSP_PYOP_METHODS%%
+};
+
+static PyModuleDef hm_ops_dsp_module_def = {
+  .m_base = PyModuleDef_HEAD_INIT,
+  .m_name = "hiemal._c.ops.dsp",
+  .m_methods = hm_ops_dsp_module_methods
+};
+
+static int init_dsp_ops(PyObject *m) {
+  PyObject *dsp_module = PyModule_Create(&hm_ops_dsp_module_def);
+  PyModule_AddObject(m, "dsp", dsp_module);
+  return 0;
+}
+
+// ops
+
+static PyModuleDef hm_ops_module_def = {
+  .m_base = PyModuleDef_HEAD_INIT,
+  .m_name = "hiemal._c.ops",
+};
+
+int init_ops(PyObject *m) {
+  PyObject *ops_module = PyModule_Create(&hm_ops_module_def);
+  init_source_ops(ops_module);
+  init_sink_ops(ops_module);
+  init_dsp_ops(ops_module);
+  PyModule_AddObject(m, "ops", ops_module);
+  return 0;
 }

@@ -55,6 +55,7 @@ int add_format_types(PyObject *m);
 int add_buffer_types(PyObject *m);
 int add_backend_types(PyObject *m);
 int add_device_types(PyObject *m);
+int init_ops(PyObject *m);
 
 int init_backends(PyObject *m);
 

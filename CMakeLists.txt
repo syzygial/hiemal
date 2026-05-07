@@ -32,14 +32,19 @@ set(OP_FILES src/core/ops/dsp/filter.c
   src/core/ops/source/file.c
   src/core/ops/sink/io_device.c
   src/core/ops/sink/file.c
+  src/core/ops/ops.h.in
+  src/core/ops/ops_internal.h.in
+  src/core/ops/ops.c.in
+  src/core/ops/ops_python.c.in
   )
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/core/ops/ops.h
   ${CMAKE_BINARY_DIR}/src/core/ops/ops_internal.h
   ${CMAKE_BINARY_DIR}/src/core/ops/ops.c
+  ${CMAKE_BINARY_DIR}/src/core/ops/ops_python.c
   DEPENDS src/core/ops/util/gen_ops.py
     src/core/ops/ops.json
     ${OP_FILES}
-  COMMAND python3 util/gen_ops.py -o ${CMAKE_BINARY_DIR}/src/core/ops -t ${CMAKE_SOURCE_DIR}/src/core/ops
+  COMMAND python3 util/gen_ops.py --python -o ${CMAKE_BINARY_DIR}/src/core/ops -t ${CMAKE_SOURCE_DIR}/src/core/ops
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/core/ops
   COMMENT "generating ops")
 
@@ -120,9 +125,8 @@ endif()
 set_target_properties(hiemal PROPERTIES
   RESOURCE "${RESOURCE_FILES}")
 
-add_subdirectory(src/core)
-add_subdirectory(src/util)
 if(WITH_PYTHON)
+  add_library(hm_python_wrapper MODULE)
   add_subdirectory(src/python)
 endif()
 if(WITH_UTILS)
@@ -131,10 +135,10 @@ endif()
 if(WITH_PROTOBUF)
   add_subdirectory(src/protobuf)
 endif()
+add_subdirectory(src/core)
+add_subdirectory(src/util)
 add_subdirectory(docs)
 add_subdirectory(test)
-
-
 
 # config summary
 message(STATUS "")

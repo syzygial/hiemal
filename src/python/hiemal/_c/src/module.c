@@ -21,6 +21,7 @@ static int hm_c_module_exec(PyObject *m) {
   import_array1(-1);
   initialize_types(m);
   init_backends(m);
+  init_ops(m);
   create_all(m);
   return 0;
 }
