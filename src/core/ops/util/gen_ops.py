@@ -187,6 +187,25 @@ hm_dsp_op* hm_dsp_{0}_op(hm_format_signature input_type, hm_format_signature out
   return op_wrapper
 
 def gen_py_wrapper(op_type, op):
+  pyop_function_str = {"source":
+"""
+int hm_pywrap_{op_name}_source (PyObject* self, PyObject* args) {{
+  return Py_None;
+}}
+""",
+      "sink":
+"""
+int hm_pywrap_{op_name}_source (PyObject* self, PyObject* args) {{
+  return Py_None;
+}}
+""",
+      "dsp":
+"""
+int hm_pywrap_{op_name}_dsp (PyObject* self, PyObject* args) {{
+  return Py_None;
+}}
+"""}
+
   pyop_wrapper = {}
   pyop_function_name = "hm_pywrap_{}_{}".format(op["name"], op_type)
   pyop_function = "PyObject* {} (PyObject*, PyObject*) {{return Py_None;}}".format(pyop_function_name)
